@@ -143,22 +143,39 @@ public:
 template <typename T>
 Quantity(T x) -> Quantity<T, 0, 0, 0>;
 
-template <typename T>
-using Dimensionless = Quantity<T, 0, 0, 0>;
+#define DefineQuantity(M, L, T, NAME) \
+    template <typename X> \
+    using NAME = Quantity<X, M, L, T>;
 
-template <typename T>
-using Mass = Quantity<T, 1, 0, 0>;
+DefineQuantity(0,  0,  0, Dimensionless)
+DefineQuantity(0,  0,  1, Time)
+DefineQuantity(0,  0, -1, AngularVelocity)
+DefineQuantity(0,  0, -1, Frequency)
+DefineQuantity(0,  0, -2, AngularAcceleration)
+DefineQuantity(0,  1,  0, Length)
+DefineQuantity(0,  1, -1, Speed)
+DefineQuantity(0,  1, -2, Acceleration)
+DefineQuantity(0,  2,  0, Area)
+DefineQuantity(0,  3,  0, Volume)
+DefineQuantity(1,  0,  0, Mass)
+DefineQuantity(1,  1, -1, Momentum)
+DefineQuantity(1,  1, -2, Force)
+DefineQuantity(1,  2,  0, MomentOfInertia)
+DefineQuantity(1,  2, -1, AngularMomentum)
+DefineQuantity(1,  2, -2, Energy)
+DefineQuantity(1,  2, -3, Power)
+DefineQuantity(1, -1, -2, Pressure)
+DefineQuantity(1, -3,  0, Density)
 
-template <typename T>
-using Length = Quantity<T, 0, 1, 0>;
+#undef DefineQuantity
+#define AliasQuantity(NAME, QUANTITY) \
+    template <typename T> \
+    using NAME = QUANTITY<T>;
 
-template <typename T>
-using Time = Quantity<T, 0, 0, 1>;
+AliasQuantity(Weight, Force)
+AliasQuantity(Torque, Energy)
+AliasQuantity(Stress, Pressure)
 
-template <typename T>
-using Speed = Quantity<T, 0, 1, -1>;
-
-template <typename T>
-using Energy = Quantity<T, 1, 2, -2>;
+#undef AliasQuantity
 
 } // namespace units
