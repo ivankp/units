@@ -27,7 +27,9 @@ TEST(Addition) {
 TEST(Addition2) {
     Quantity<double,1,0,0> a = 5.;
     Quantity<float,1,0,0> b = 2.;
+    auto c = a + b;
     a += b;
+    TEST_EQ(a, c);
 }
 
 TEST(Subtraction) {
@@ -40,7 +42,19 @@ TEST(Subtraction) {
 TEST(Subtraction2) {
     Quantity<double,1,0,0> a = 5.;
     Quantity<float,1,0,0> b = 2.;
+    auto c = a - b;
     a -= b;
+    TEST_EQ(a, c);
+}
+
+TEST(Comparison) {
+    Quantity<double,1,0,0> a = 5.;
+    Quantity<float,1,0,0> b = 2.;
+    TEST_TRUE(a != b);
+    TEST_TRUE(b < a);
+    TEST_TRUE(a >= b);
+    TEST_TRUE(b < a);
+    TEST_TRUE(a >= b);
 }
 
 TEST(Multiplication) {

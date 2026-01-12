@@ -38,6 +38,18 @@ public:
         return value;
     }
 
+    // Comparison --------------------------------------------------------------
+
+    template <typename R>
+    constexpr auto operator<=>(Quantity<R, kg, m, s> r) const noexcept {
+        return value <=> r.value;
+    }
+
+    template <typename R>
+    constexpr bool operator==(Quantity<R, kg, m, s> r) const noexcept {
+        return value == r.value;
+    }
+
     // Addition ----------------------------------------------------------------
 
     template <typename R>
