@@ -150,7 +150,6 @@ Quantity(T x) -> Quantity<T, 0, 0, 0>;
 DefineQuantity(0,  0,  0, Dimensionless)
 DefineQuantity(0,  0,  1, Time)
 DefineQuantity(0,  0, -1, AngularVelocity)
-DefineQuantity(0,  0, -1, Frequency)
 DefineQuantity(0,  0, -2, AngularAcceleration)
 DefineQuantity(0,  1,  0, Length)
 DefineQuantity(0,  1, -1, Speed)
@@ -164,17 +163,20 @@ DefineQuantity(1,  2,  0, MomentOfInertia)
 DefineQuantity(1,  2, -1, AngularMomentum)
 DefineQuantity(1,  2, -2, Energy)
 DefineQuantity(1,  2, -3, Power)
+DefineQuantity(1, -1, -1, Viscosity)
 DefineQuantity(1, -1, -2, Pressure)
 DefineQuantity(1, -3,  0, Density)
 
 #undef DefineQuantity
 #define AliasQuantity(NAME, QUANTITY) \
-    template <typename T> \
-    using NAME = QUANTITY<T>;
+    template <typename X> \
+    using NAME = QUANTITY<X>;
 
-AliasQuantity(Weight, Force)
-AliasQuantity(Torque, Energy)
+AliasQuantity(Frequency, AngularVelocity)
 AliasQuantity(Stress, Pressure)
+AliasQuantity(Torque, Energy)
+AliasQuantity(Weight, Force)
+AliasQuantity(Work, Energy)
 
 #undef AliasQuantity
 
