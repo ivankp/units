@@ -101,3 +101,11 @@ TEST(CompoundQuantity) {
         TEST_EQ(double(E / Energy<double>(1)), 2.52);
     }(m * pow<2>(v));
 }
+
+void type(auto _);
+
+TEST(Literal) {
+    static_assert(std::is_same_v<decltype(1 * "kg"_q), Mass<double>>);
+    static_assert(std::is_same_v<decltype(1 * "m"_q), Length<double>>);
+    static_assert(std::is_same_v<decltype(1 * "s"_q), Time<double>>);
+}

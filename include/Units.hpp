@@ -180,4 +180,47 @@ AliasQuantity(Work, Energy)
 
 #undef AliasQuantity
 
+namespace detail {
+
+template <unsigned N>
+struct StringLiteral {
+    char s[N]{};
+
+    constexpr StringLiteral(const char(&arr)[N]) noexcept {
+        for (unsigned i = 0; i < N; ++i)
+            s[i] = arr[i];
+    }
+};
+
+struct ParsedLiteral {
+    double factor = 1;
+    int8_t kg = 0, m = 0, s = 0;
+
+    template <unsigned N>
+    constexpr ParsedLiteral(const StringLiteral<N>& str) {
+        for (unsigned i = 0; i < N; ++i) {
+            const char c = str.s[i];
+            if (!(('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z'))) {
+                const std::string_view v(str.s, i);
+                if (v == "kg") {
+                    kg += 1;
+                } else if (v == "m") {
+                    m += 1;
+                } else if (v == "s") {
+                    s += 1;
+                }
+                break; // TODO
+            }
+        }
+    }
+};
+
+}
+
+template <detail::StringLiteral s>
+constexpr auto operator ""_q() noexcept {
+    constexpr detail::ParsedLiteral p(s);
+    return Quantity<double, p.kg, p.m, p.s>(p.factor);
+}
+
 } // namespace units
