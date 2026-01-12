@@ -6,6 +6,47 @@
 
 namespace units {
 
+namespace detail {
+
+template <unsigned N>
+struct StringLiteral {
+    char s[N]{};
+
+    constexpr StringLiteral(const char(&arr)[N]) noexcept {
+        for (unsigned i = 0; i < N; ++i)
+            s[i] = arr[i];
+    }
+};
+
+template <typename T>
+struct ParsedLiteral {
+    T factor = 1;
+    int8_t kg = 0, m = 0, s = 0;
+
+    template <unsigned N>
+    constexpr ParsedLiteral(const StringLiteral<N>& str) {
+        for (unsigned i = 0; i < N; ++i) {
+            const char c = str.s[i];
+            if ((c < 'A' || 'Z' < c) && (c < 'a' || 'z' < c)) {
+                // TODO: write a custom comparison function (maybe lambda)
+                const std::string_view v(str.s, i);
+                if (v == "kg") {
+                    kg += 1;
+                } else if (v == "m") {
+                    m += 1;
+                } else if (v == "s") {
+                    s += 1;
+                }
+                break; // TODO: complete parsing algorithm
+            }
+        }
+    }
+};
+
+} // namespace detail
+
+// TODO: Vector class to represent dimensions
+
 template <typename T, int8_t kg, int8_t m, int8_t s>
 class Quantity;
 
@@ -21,6 +62,24 @@ concept AQuantity = IsQuantity<T>::value;
 template <typename T>
 concept NotAQuantity = !IsQuantity<T>::value;
 
+namespace literals {
+
+template <detail::StringLiteral s>
+constexpr auto operator ""_u() noexcept {
+    constexpr detail::ParsedLiteral<double> p(s);
+    return Quantity<double, p.kg, p.m, p.s>(p.factor);
+}
+
+template <detail::StringLiteral s>
+constexpr auto operator ""_uf() noexcept {
+    constexpr detail::ParsedLiteral<float> p(s);
+    return Quantity<float, p.kg, p.m, p.s>(p.factor);
+}
+
+} // namespace literals
+
+using namespace literals;
+
 template <typename T, int8_t kg, int8_t m, int8_t s>
 class Quantity {
     T value;
@@ -29,6 +88,7 @@ class Quantity {
     friend class Quantity;
 
 public:
+    // TODO: private constructors
     constexpr Quantity() noexcept: value{} { }
     constexpr Quantity(T value) noexcept: value(value) { }
 
@@ -172,55 +232,14 @@ DefineQuantity(1, -3,  0, Density)
     template <typename X> \
     using NAME = QUANTITY<X>;
 
+AliasQuantity(Distance, Length)
 AliasQuantity(Frequency, AngularVelocity)
 AliasQuantity(Stress, Pressure)
 AliasQuantity(Torque, Energy)
+AliasQuantity(Velocity, Speed)
 AliasQuantity(Weight, Force)
 AliasQuantity(Work, Energy)
 
 #undef AliasQuantity
-
-namespace detail {
-
-template <unsigned N>
-struct StringLiteral {
-    char s[N]{};
-
-    constexpr StringLiteral(const char(&arr)[N]) noexcept {
-        for (unsigned i = 0; i < N; ++i)
-            s[i] = arr[i];
-    }
-};
-
-struct ParsedLiteral {
-    double factor = 1;
-    int8_t kg = 0, m = 0, s = 0;
-
-    template <unsigned N>
-    constexpr ParsedLiteral(const StringLiteral<N>& str) {
-        for (unsigned i = 0; i < N; ++i) {
-            const char c = str.s[i];
-            if (!(('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z'))) {
-                const std::string_view v(str.s, i);
-                if (v == "kg") {
-                    kg += 1;
-                } else if (v == "m") {
-                    m += 1;
-                } else if (v == "s") {
-                    s += 1;
-                }
-                break; // TODO
-            }
-        }
-    }
-};
-
-}
-
-template <detail::StringLiteral s>
-constexpr auto operator ""_q() noexcept {
-    constexpr detail::ParsedLiteral p(s);
-    return Quantity<double, p.kg, p.m, p.s>(p.factor);
-}
 
 } // namespace units

@@ -102,10 +102,15 @@ TEST(CompoundQuantity) {
     }(m * pow<2>(v));
 }
 
-void type(auto _);
+TEST(LiteralDouble) {
+    static_assert(std::is_same_v<decltype(1 * "kg"_u), Mass<double>>);
+    static_assert(std::is_same_v<decltype(1 * "m"_u), Length<double>>);
+    static_assert(std::is_same_v<decltype(1 * "s"_u), Time<double>>);
+    static_assert(std::is_same_v<decltype("m"_u / "s"_u), Speed<double>>);
+}
 
-TEST(Literal) {
-    static_assert(std::is_same_v<decltype(1 * "kg"_q), Mass<double>>);
-    static_assert(std::is_same_v<decltype(1 * "m"_q), Length<double>>);
-    static_assert(std::is_same_v<decltype(1 * "s"_q), Time<double>>);
+TEST(LiteralFloat) {
+    static_assert(std::is_same_v<decltype(1 * "kg"_uf), Mass<float>>);
+    static_assert(std::is_same_v<decltype(1 * "m"_uf), Length<float>>);
+    static_assert(std::is_same_v<decltype(1 * "s"_uf), Time<float>>);
 }
