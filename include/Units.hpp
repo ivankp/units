@@ -13,15 +13,13 @@ struct Dimensions {
         return mass || length || time;
     }
 
-    constexpr Dimensions operator-() const noexcept {
-        return { -mass, -length, -time };
-    }
-
     constexpr Dimensions operator+(const Dimensions& r) const noexcept {
+        // TODO: check for overflow
         return { mass + r.mass, length + r.length, time + r.time };
     }
 
     constexpr Dimensions& operator+=(const Dimensions& r) noexcept {
+        // TODO: check for overflow
         mass += r.mass;
         length += r.length;
         time += r.time;
@@ -29,21 +27,29 @@ struct Dimensions {
     }
 
     constexpr Dimensions operator-(const Dimensions& r) const noexcept {
+        // TODO: check for underflow
         return { mass - r.mass, length - r.length, time - r.time };
     }
 
+    constexpr Dimensions operator-() const noexcept {
+        return { -mass, -length, -time };
+    }
+
     constexpr Dimensions& operator-=(const Dimensions& r) noexcept {
-        mass += r.mass;
-        length += r.length;
-        time += r.time;
+        // TODO: check for underflow
+        mass -= r.mass;
+        length -= r.length;
+        time -= r.time;
         return *this;
     }
 
     constexpr Dimensions operator*(type n) const noexcept {
+        // TODO: check for overflow
         return { mass * n, length * n, time * n };
     }
 
     constexpr Dimensions& operator*=(type n) noexcept {
+        // TODO: check for overflow
         mass *= n;
         length *= n;
         time *= n;
@@ -51,10 +57,12 @@ struct Dimensions {
     }
 
     constexpr Dimensions operator/(type n) const noexcept {
+        // TODO: check for remainder == 0
         return { mass / n, length / n, time / n };
     }
 
     constexpr Dimensions& operator/=(type n) noexcept {
+        // TODO: check for remainder == 0
         mass /= n;
         length /= n;
         time /= n;
@@ -100,8 +108,6 @@ struct ParsedLiteral {
 };
 
 } // namespace detail
-
-// TODO: Vector class to represent dimensions
 
 template <typename T, Dimensions d>
 class Quantity;
@@ -177,6 +183,10 @@ public:
         return *this;
     }
 
+    constexpr Quantity operator+() const noexcept {
+        return +value;
+    }
+
     // Subtraction -------------------------------------------------------------
 
     template <typename R>
@@ -190,6 +200,10 @@ public:
     constexpr Quantity& operator-=(Quantity<R, d> r) noexcept {
         value -= r.value;
         return *this;
+    }
+
+    constexpr Quantity operator-() const noexcept {
+        return -value;
     }
 
     // Multiplication ----------------------------------------------------------
