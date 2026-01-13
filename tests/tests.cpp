@@ -103,6 +103,12 @@ TEST(CompoundQuantity) {
     }(m * pow<2>(v));
 }
 
+TEST(Inverse) {
+    Time<double> time = 5.;
+    auto freq = 1 / time;
+    static_assert(std::is_same_v<decltype(freq), Frequency<double>>);
+}
+
 TEST(LiteralDouble) {
     static_assert(std::is_same_v<decltype(1 * "kg"_u), Mass<double>>);
     static_assert(std::is_same_v<decltype(1 * "m"_u), Length<double>>);
