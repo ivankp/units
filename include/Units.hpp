@@ -1,10 +1,66 @@
 #pragma once
 
-#include <cstdint>
 #include <cmath>
 #include <type_traits>
 
 namespace units {
+
+struct Dimensions {
+    using type = int;
+    type mass = 0, length = 0, time = 0;
+
+    constexpr operator bool() const noexcept {
+        return mass || length || time;
+    }
+
+    constexpr Dimensions operator-() const noexcept {
+        return { -mass, -length, -time };
+    }
+
+    constexpr Dimensions operator+(const Dimensions& r) const noexcept {
+        return { mass + r.mass, length + r.length, time + r.time };
+    }
+
+    constexpr Dimensions& operator+=(const Dimensions& r) noexcept {
+        mass += r.mass;
+        length += r.length;
+        time += r.time;
+        return *this;
+    }
+
+    constexpr Dimensions operator-(const Dimensions& r) const noexcept {
+        return { mass - r.mass, length - r.length, time - r.time };
+    }
+
+    constexpr Dimensions& operator-=(const Dimensions& r) noexcept {
+        mass += r.mass;
+        length += r.length;
+        time += r.time;
+        return *this;
+    }
+
+    constexpr Dimensions operator*(type n) const noexcept {
+        return { mass * n, length * n, time * n };
+    }
+
+    constexpr Dimensions& operator*=(type n) noexcept {
+        mass *= n;
+        length *= n;
+        time *= n;
+        return *this;
+    }
+
+    constexpr Dimensions operator/(type n) const noexcept {
+        return { mass / n, length / n, time / n };
+    }
+
+    constexpr Dimensions& operator/=(type n) noexcept {
+        mass /= n;
+        length /= n;
+        time /= n;
+        return *this;
+    }
+};
 
 namespace detail {
 
@@ -21,7 +77,7 @@ struct StringLiteral {
 template <typename T>
 struct ParsedLiteral {
     T factor = 1;
-    int8_t kg = 0, m = 0, s = 0;
+    Dimensions d { };
 
     template <unsigned N>
     constexpr ParsedLiteral(const StringLiteral<N>& str) {
@@ -31,11 +87,11 @@ struct ParsedLiteral {
                 // TODO: write a custom comparison function (maybe lambda)
                 const std::string_view v(str.s, i);
                 if (v == "kg") {
-                    kg += 1;
+                    d.mass += 1;
                 } else if (v == "m") {
-                    m += 1;
+                    d.length += 1;
                 } else if (v == "s") {
-                    s += 1;
+                    d.time += 1;
                 }
                 break; // TODO: complete parsing algorithm
             }
@@ -47,14 +103,14 @@ struct ParsedLiteral {
 
 // TODO: Vector class to represent dimensions
 
-template <typename T, int8_t kg, int8_t m, int8_t s>
+template <typename T, Dimensions d>
 class Quantity;
 
 template <typename T>
 struct IsQuantity : std::false_type { };
 
-template <typename T, int8_t kg, int8_t m, int8_t s>
-struct IsQuantity<Quantity<T, kg, m, s>> : std::true_type { };
+template <typename T, Dimensions d>
+struct IsQuantity<Quantity<T, d>> : std::true_type { };
 
 template <typename T>
 concept AQuantity = IsQuantity<T>::value;
@@ -67,24 +123,22 @@ namespace literals {
 template <detail::StringLiteral s>
 constexpr auto operator ""_u() noexcept {
     constexpr detail::ParsedLiteral<double> p(s);
-    return Quantity<double, p.kg, p.m, p.s>(p.factor);
+    return Quantity<double, p.d>(p.factor);
 }
 
 template <detail::StringLiteral s>
 constexpr auto operator ""_uf() noexcept {
     constexpr detail::ParsedLiteral<float> p(s);
-    return Quantity<float, p.kg, p.m, p.s>(p.factor);
+    return Quantity<float, p.d>(p.factor);
 }
 
 } // namespace literals
 
-using namespace literals;
-
-template <typename T, int8_t kg, int8_t m, int8_t s>
+template <typename T, Dimensions d>
 class Quantity {
     T value;
 
-    template <typename, int8_t, int8_t, int8_t>
+    template <typename, Dimensions>
     friend class Quantity;
 
 public:
@@ -92,35 +146,33 @@ public:
     constexpr Quantity() noexcept: value{} { }
     constexpr Quantity(T value) noexcept: value(value) { }
 
-    static constexpr bool dimensionless = kg == 0 && m == 0 && s == 0;
-
-    constexpr operator T() const noexcept requires dimensionless {
+    constexpr operator T() const noexcept requires (!d) {
         return value;
     }
 
     // Comparison --------------------------------------------------------------
 
     template <typename R>
-    constexpr auto operator<=>(Quantity<R, kg, m, s> r) const noexcept {
+    constexpr auto operator<=>(Quantity<R, d> r) const noexcept {
         return value <=> r.value;
     }
 
     template <typename R>
-    constexpr bool operator==(Quantity<R, kg, m, s> r) const noexcept {
+    constexpr bool operator==(Quantity<R, d> r) const noexcept {
         return value == r.value;
     }
 
     // Addition ----------------------------------------------------------------
 
     template <typename R>
-    friend constexpr auto operator+(Quantity l, Quantity<R, kg, m, s> r) noexcept
-    -> Quantity<decltype(l.value + r.value), kg, m, s>
+    friend constexpr auto operator+(Quantity l, Quantity<R, d> r) noexcept
+    -> Quantity<decltype(l.value + r.value), d>
     {
         return l.value + r.value;
     }
 
     template <typename R>
-    constexpr Quantity& operator+=(Quantity<R, kg, m, s> r) noexcept {
+    constexpr Quantity& operator+=(Quantity<R, d> r) noexcept {
         value += r.value;
         return *this;
     }
@@ -128,35 +180,35 @@ public:
     // Subtraction -------------------------------------------------------------
 
     template <typename R>
-    friend constexpr auto operator-(Quantity l, Quantity<R, kg, m, s> r) noexcept
-    -> Quantity<decltype(l.value - r.value), kg, m, s>
+    friend constexpr auto operator-(Quantity l, Quantity<R, d> r) noexcept
+    -> Quantity<decltype(l.value - r.value), d>
     {
         return l.value - r.value;
     }
 
     template <typename R>
-    constexpr Quantity& operator-=(Quantity<R, kg, m, s> r) noexcept {
+    constexpr Quantity& operator-=(Quantity<R, d> r) noexcept {
         value -= r.value;
         return *this;
     }
 
     // Multiplication ----------------------------------------------------------
 
-    template <typename R, int8_t Rkg, int8_t Rm, int8_t Rs>
-    friend constexpr auto operator*(Quantity l, Quantity<R, Rkg, Rm, Rs> r) noexcept
-    -> Quantity<decltype(l.value * r.value), kg + Rkg, m + Rm, s + Rs>
+    template <typename R, Dimensions Rd>
+    friend constexpr auto operator*(Quantity l, Quantity<R, Rd> r) noexcept
+    -> Quantity<decltype(l.value * r.value), d + Rd>
     {
         return l.value * r.value;
     }
 
     friend constexpr auto operator*(Quantity l, NotAQuantity auto r) noexcept
-    -> Quantity<decltype(l.value * r), kg, m, s>
+    -> Quantity<decltype(l.value * r), d>
     {
         return l.value * r;
     }
 
     friend constexpr auto operator*(NotAQuantity auto l, Quantity r) noexcept
-    -> Quantity<decltype(l * r.value), kg, m, s>
+    -> Quantity<decltype(l * r.value), d>
     {
         return l * r.value;
     }
@@ -168,21 +220,21 @@ public:
 
     // Division ----------------------------------------------------------------
 
-    template <typename R, int8_t Rkg, int8_t Rm, int8_t Rs>
-    friend constexpr auto operator/(Quantity l, Quantity<R, Rkg, Rm, Rs> r) noexcept
-    -> Quantity<decltype(l.value / r.value), kg - Rkg, m - Rm, s - Rs>
+    template <typename R, Dimensions Rd>
+    friend constexpr auto operator/(Quantity l, Quantity<R, Rd> r) noexcept
+    -> Quantity<decltype(l.value / r.value), d - Rd>
     {
         return l.value / r.value;
     }
 
     friend constexpr auto operator/(Quantity l, NotAQuantity auto r) noexcept
-    -> Quantity<decltype(l.value / r), kg, m, s>
+    -> Quantity<decltype(l.value / r), d>
     {
         return l.value / r;
     }
 
     friend constexpr auto operator/(NotAQuantity auto l, Quantity r) noexcept
-    -> Quantity<decltype(l / r.value), kg, m, s>
+    -> Quantity<decltype(l / r.value), -d>
     {
         return l / r.value;
     }
@@ -194,18 +246,18 @@ public:
 
     // Exponentiation ----------------------------------------------------------
 
-    template <int8_t n>
-    friend constexpr Quantity<T, kg*n, m*n, s*n> pow(Quantity q) noexcept {
+    template <typename Dimensions::type n>
+    friend constexpr Quantity<T, d * n> pow(Quantity q) noexcept {
         return std::pow(q.value, n);
     }
 };
 
 template <typename T>
-Quantity(T x) -> Quantity<T, 0, 0, 0>;
+Quantity(T x) -> Quantity<T, {}>;
 
 #define DefineQuantity(M, L, T, NAME) \
     template <typename X> \
-    using NAME = Quantity<X, M, L, T>;
+    using NAME = Quantity<X, {M, L, T}>;
 
 DefineQuantity(0,  0,  0, Dimensionless)
 DefineQuantity(0,  0,  1, Time)

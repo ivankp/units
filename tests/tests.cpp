@@ -5,10 +5,11 @@
 #include <type_traits>
 
 using namespace units;
+using namespace units::literals;
 
 TEST(Size) {
-    static_assert(sizeof(Quantity<double,0,1,0>) == sizeof(double));
-    static_assert(sizeof(Quantity<float ,0,1,0>) == sizeof(float ));
+    static_assert(sizeof(Quantity<double,{0,1,0}>) == sizeof(double));
+    static_assert(sizeof(Quantity<float ,{0,1,0}>) == sizeof(float ));
 }
 
 TEST(ImplicitConversion) {
@@ -18,38 +19,38 @@ TEST(ImplicitConversion) {
 }
 
 TEST(Addition) {
-    Quantity<double,1,0,0> a = 5.;
-    Quantity<float,1,0,0> b = 2.;
+    Quantity<double,{1,0,0}> a = 5.;
+    Quantity<float,{1,0,0}> b = 2.;
     auto c = a + b;
-    static_assert(std::is_same_v<decltype(c), Quantity<double,1,0,0>>);
+    static_assert(std::is_same_v<decltype(c), Quantity<double,{1,0,0}>>);
 }
 
 TEST(Addition2) {
-    Quantity<double,1,0,0> a = 5.;
-    Quantity<float,1,0,0> b = 2.;
+    Quantity<double,{1,0,0}> a = 5.;
+    Quantity<float,{1,0,0}> b = 2.;
     auto c = a + b;
     a += b;
     TEST_EQ(a, c);
 }
 
 TEST(Subtraction) {
-    Quantity<double,1,0,0> a = 5.;
-    Quantity<float,1,0,0> b = 2.;
+    Quantity<double,{1,0,0}> a = 5.;
+    Quantity<float,{1,0,0}> b = 2.;
     auto c = a - b;
-    static_assert(std::is_same_v<decltype(c), Quantity<double,1,0,0>>);
+    static_assert(std::is_same_v<decltype(c), Quantity<double,{1,0,0}>>);
 }
 
 TEST(Subtraction2) {
-    Quantity<double,1,0,0> a = 5.;
-    Quantity<float,1,0,0> b = 2.;
+    Quantity<double,{1,0,0}> a = 5.;
+    Quantity<float,{1,0,0}> b = 2.;
     auto c = a - b;
     a -= b;
     TEST_EQ(a, c);
 }
 
 TEST(Comparison) {
-    Quantity<double,1,0,0> a = 5.;
-    Quantity<float,1,0,0> b = 2.;
+    Quantity<double,{1,0,0}> a = 5.;
+    Quantity<float,{1,0,0}> b = 2.;
     TEST_TRUE(a != b);
     TEST_TRUE(b < a);
     TEST_TRUE(a >= b);
@@ -58,18 +59,18 @@ TEST(Comparison) {
 }
 
 TEST(Multiplication) {
-    Quantity<double,0,1,0> length = 5.;
-    Quantity<float,0,0,1> time = 2.;
+    Quantity<double,{0,1,0}> length = 5.;
+    Quantity<float,{0,0,1}> time = 2.;
     auto product = length * time;
-    static_assert(std::is_same_v<decltype(product), Quantity<double,0,1,1>>);
+    static_assert(std::is_same_v<decltype(product), Quantity<double,{0,1,1}>>);
 }
 
 TEST(Division) {
-    Quantity<double,0,1,0> length = 5.;
-    Quantity<float,0,0,1> time = 2.f;
+    Quantity<double,{0,1,0}> length = 5.;
+    Quantity<float,{0,0,1}> time = 2.f;
     auto speed = length / time;
-    static_assert(std::is_same_v<decltype(speed), Quantity<double,0,1,-1>>);
-    double value = speed / Quantity<int,0,1,-1>(1);
+    static_assert(std::is_same_v<decltype(speed), Quantity<double,{0,1,-1}>>);
+    double value = speed / Quantity<int,{0,1,-1}>(1);
     TEST_EQ(value, 2.5);
 }
 
@@ -84,10 +85,10 @@ TEST(MultiplicationByFactor) {
 }
 
 TEST(Exponentiation) {
-    Quantity<float,0,1,0> length = 5.f;
+    Quantity<float,{0,1,0}> length = 5.f;
     auto area = pow<2>(length);
-    static_assert(std::is_same_v<decltype(area), Quantity<float,0,2,0>>);
-    double value = area / Quantity<int,0,2,0>(1);
+    static_assert(std::is_same_v<decltype(area), Quantity<float,{0,2,0}>>);
+    double value = area / Quantity<int,{0,2,0}>(1);
     TEST_EQ(value, 25);
 }
 
