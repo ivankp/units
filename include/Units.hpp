@@ -80,6 +80,14 @@ struct StringLiteral {
         for (unsigned i = 0; i < N; ++i)
             s[i] = arr[i];
     }
+
+    constexpr const char* begin() const noexcept {
+        return s;
+    }
+
+    constexpr const char* end() const noexcept {
+        return s + N;
+    }
 };
 
 template <typename T>
@@ -87,13 +95,39 @@ struct ParsedLiteral {
     T factor = 1;
     Dimensions d { };
 
-    template <unsigned N>
-    constexpr ParsedLiteral(const StringLiteral<N>& str) {
-        for (unsigned i = 0; i < N; ++i) {
-            const char c = str.s[i];
+    enum Category { alph, num, op, none };
+
+    constexpr ParsedLiteral(const char* a, const char* const e) {
+        const char* b = a;
+        // Category cat = none, cat2 = none;
+
+        for (; b < e; ++b) {
+            const char c = *b;
+
+            /*
+            if (c == ' ' || c == '\t') {
+                cat2 = none;
+            } else if (('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z')) {
+                cat2 = alph;
+            } else {
+                // TODO: error
+            }
+
+            if (cat != cat2) {
+                switch (cat) {
+                    case alph: {
+                    } break;
+                    case num: {
+                    } break;
+                }
+                a = b;
+                cat = cat2;
+            }
+            */
+
             if ((c < 'A' || 'Z' < c) && (c < 'a' || 'z' < c)) {
                 // TODO: write a custom comparison function (maybe lambda)
-                const std::string_view v(str.s, i);
+                const std::string_view v(a, b);
                 if (v == "kg") {
                     d.mass += 1;
                 } else if (v == "m") {
@@ -128,13 +162,13 @@ namespace literals {
 
 template <detail::StringLiteral s>
 constexpr auto operator ""_u() noexcept {
-    constexpr detail::ParsedLiteral<double> p(s);
+    constexpr detail::ParsedLiteral<double> p(s.begin(), s.end());
     return Quantity<double, p.d>(p.factor);
 }
 
 template <detail::StringLiteral s>
 constexpr auto operator ""_uf() noexcept {
-    constexpr detail::ParsedLiteral<float> p(s);
+    constexpr detail::ParsedLiteral<float> p(s.begin(), s.end());
     return Quantity<float, p.d>(p.factor);
 }
 
