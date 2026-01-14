@@ -94,6 +94,18 @@ TEST(DivisionWithFactors) {
     TEST_EQ(double(l3 / l1), 0.25);
 }
 
+TEST(AdditionInPlace) {
+    Length<double> l1 = 5;
+    l1 += Length<float>(3);
+    TEST_EQ(l1, Length<double>(8));
+}
+
+TEST(SubtractionInPlace) {
+    Length<double> l1 = 5;
+    l1 -= Length<float>(3);
+    TEST_EQ(l1, Length<double>(2));
+}
+
 TEST(MultiplicationInPlace) {
     Length<double> l1 = 5;
     const auto l2 = l1;
