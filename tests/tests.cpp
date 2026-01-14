@@ -74,7 +74,7 @@ TEST(Division) {
     TEST_EQ(value, 2.5);
 }
 
-TEST(MultiplicationByFactor) {
+TEST(MultiplicationWithFactors) {
     Length<double> l1 = 5;
     auto l2 = 2. * l1;
     static_assert(std::is_same_v<decltype(l2), Length<double>>);
@@ -82,6 +82,16 @@ TEST(MultiplicationByFactor) {
     static_assert(std::is_same_v<decltype(l3), Length<double>>);
     TEST_EQ(double(l2 / l1), 2);
     TEST_EQ(double(l3 / l1), 3);
+}
+
+TEST(DivisionWithFactors) {
+    Length<double> l1 = 5;
+    auto l2 = 2 / l1;
+    static_assert(std::is_same_v<decltype(l2), Quantity<double,{0,-1,0}>>);
+    auto l3 = l1 / 4;
+    static_assert(std::is_same_v<decltype(l3), Length<double>>);
+    TEST_EQ(double(l2 * l1), 2);
+    TEST_EQ(double(l3 / l1), 0.25);
 }
 
 TEST(Exponentiation) {

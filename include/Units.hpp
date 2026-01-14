@@ -5,9 +5,10 @@
 
 namespace units {
 
+using dim_t = int;
+
 struct Dimensions {
-    using type = int;
-    type mass = 0, length = 0, time = 0;
+    dim_t mass = 0, length = 0, time = 0;
 
     constexpr operator bool() const noexcept {
         return mass || length || time;
@@ -43,12 +44,12 @@ struct Dimensions {
         return *this;
     }
 
-    constexpr Dimensions operator*(type n) const noexcept {
+    constexpr Dimensions operator*(dim_t n) const noexcept {
         // TODO: check for overflow
         return { mass * n, length * n, time * n };
     }
 
-    constexpr Dimensions& operator*=(type n) noexcept {
+    constexpr Dimensions& operator*=(dim_t n) noexcept {
         // TODO: check for overflow
         mass *= n;
         length *= n;
@@ -56,12 +57,12 @@ struct Dimensions {
         return *this;
     }
 
-    constexpr Dimensions operator/(type n) const noexcept {
+    constexpr Dimensions operator/(dim_t n) const noexcept {
         // TODO: check for remainder == 0
         return { mass / n, length / n, time / n };
     }
 
-    constexpr Dimensions& operator/=(type n) noexcept {
+    constexpr Dimensions& operator/=(dim_t n) noexcept {
         // TODO: check for remainder == 0
         mass /= n;
         length /= n;
@@ -205,10 +206,10 @@ public:
     // Addition ----------------------------------------------------------------
 
     template <typename R>
-    friend constexpr auto operator+(Quantity l, Quantity<R, d> r) noexcept
-    -> Quantity<decltype(l.value + r.value), d>
+    constexpr auto operator+(Quantity<R, d> r) const noexcept
+    -> Quantity<decltype(value + r.value), d>
     {
-        return l.value + r.value;
+        return value + r.value;
     }
 
     template <typename R>
@@ -224,10 +225,10 @@ public:
     // Subtraction -------------------------------------------------------------
 
     template <typename R>
-    friend constexpr auto operator-(Quantity l, Quantity<R, d> r) noexcept
-    -> Quantity<decltype(l.value - r.value), d>
+    constexpr auto operator-(Quantity<R, d> r) const noexcept
+    -> Quantity<decltype(value - r.value), d>
     {
-        return l.value - r.value;
+        return value - r.value;
     }
 
     template <typename R>
@@ -243,19 +244,21 @@ public:
     // Multiplication ----------------------------------------------------------
 
     template <typename R, Dimensions Rd>
-    friend constexpr auto operator*(Quantity l, Quantity<R, Rd> r) noexcept
-    -> Quantity<decltype(l.value * r.value), d + Rd>
+    constexpr auto operator*(Quantity<R, Rd> r) const noexcept
+    -> Quantity<decltype(value * r.value), d + Rd>
     {
-        return l.value * r.value;
+        return value * r.value;
     }
 
-    friend constexpr auto operator*(Quantity l, NotAQuantity auto r) noexcept
+    template <NotAQuantity R>
+    friend constexpr auto operator*(Quantity l, R r) noexcept
     -> Quantity<decltype(l.value * r), d>
     {
         return l.value * r;
     }
 
-    friend constexpr auto operator*(NotAQuantity auto l, Quantity r) noexcept
+    template <NotAQuantity L>
+    friend constexpr auto operator*(L l, Quantity r) noexcept
     -> Quantity<decltype(l * r.value), d>
     {
         return l * r.value;
@@ -269,19 +272,21 @@ public:
     // Division ----------------------------------------------------------------
 
     template <typename R, Dimensions Rd>
-    friend constexpr auto operator/(Quantity l, Quantity<R, Rd> r) noexcept
-    -> Quantity<decltype(l.value / r.value), d - Rd>
+    constexpr auto operator/(Quantity<R, Rd> r) const noexcept
+    -> Quantity<decltype(value / r.value), d - Rd>
     {
-        return l.value / r.value;
+        return value / r.value;
     }
 
-    friend constexpr auto operator/(Quantity l, NotAQuantity auto r) noexcept
+    template <NotAQuantity R>
+    friend constexpr auto operator/(Quantity l, R r) noexcept
     -> Quantity<decltype(l.value / r), d>
     {
         return l.value / r;
     }
 
-    friend constexpr auto operator/(NotAQuantity auto l, Quantity r) noexcept
+    template <NotAQuantity L>
+    friend constexpr auto operator/(L l, Quantity r) noexcept
     -> Quantity<decltype(l / r.value), -d>
     {
         return l / r.value;
@@ -294,9 +299,9 @@ public:
 
     // Exponentiation ----------------------------------------------------------
 
-    template <typename Dimensions::type n>
+    template <dim_t n>
     friend constexpr Quantity<T, d * n> pow(Quantity q) noexcept {
-        return std::pow(q.value, n);
+        return T(std::pow(q.value, n));
     }
 };
 
@@ -305,7 +310,7 @@ Quantity(T x) -> Quantity<T, {}>;
 
 #define DefineQuantity(M, L, T, NAME) \
     template <typename X> \
-    using NAME = Quantity<X, {M, L, T}>;
+    using NAME = Quantity<X, {dim_t(M), dim_t(L), dim_t(T)}>;
 
 DefineQuantity(0,  0,  0, Dimensionless)
 DefineQuantity(0,  0,  1, Time)
