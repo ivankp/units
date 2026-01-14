@@ -94,6 +94,20 @@ TEST(DivisionWithFactors) {
     TEST_EQ(double(l3 / l1), 0.25);
 }
 
+TEST(MultiplicationInPlace) {
+    Length<double> l1 = 5;
+    const auto l2 = l1;
+    l1 *= 2;
+    TEST_EQ(double(l1 / l2), 2);
+}
+
+TEST(DivisionInPlace) {
+    Length<double> l1 = 5;
+    const auto l2 = l1;
+    l1 /= 2;
+    TEST_EQ(double(l1 / l2), 0.5);
+}
+
 TEST(Exponentiation) {
     Quantity<float,{0,1,0}> length = 5.f;
     auto area = pow<2>(length);

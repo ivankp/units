@@ -175,8 +175,8 @@ constexpr auto operator ""_uf() noexcept {
 
 } // namespace literals
 
-template <typename T, Dimensions d>
-class Quantity {
+template <NotAQuantity T, Dimensions d>
+class Quantity<T, d> {
     T value;
 
     template <typename, Dimensions>
@@ -251,10 +251,10 @@ public:
     }
 
     template <NotAQuantity R>
-    friend constexpr auto operator*(Quantity l, R r) noexcept
-    -> Quantity<decltype(l.value * r), d>
+    constexpr auto operator*(R r) const noexcept
+    -> Quantity<decltype(value * r), d>
     {
-        return l.value * r;
+        return value * r;
     }
 
     template <NotAQuantity L>
@@ -265,7 +265,7 @@ public:
     }
 
     constexpr Quantity& operator*=(auto r) noexcept {
-        value *= r.value;
+        value *= r;
         return *this;
     }
 
@@ -293,7 +293,7 @@ public:
     }
 
     constexpr Quantity& operator/=(auto r) noexcept {
-        value /= r.value;
+        value /= r;
         return *this;
     }
 
