@@ -91,14 +91,13 @@ struct StringLiteral {
     }
 };
 
-template <typename T>
-struct ParsedLiteral {
-    T factor = 1;
+struct LiteralParser {
+    double factor = 1;
     Dimensions d { };
 
     enum Category { alph, num, op, none };
 
-    constexpr ParsedLiteral(const char* a, const char* const e) {
+    constexpr LiteralParser(const char* a, const char* const e) {
         const char* b = a;
         // Category cat = none, cat2 = none;
 
@@ -163,14 +162,14 @@ namespace literals {
 
 template <detail::StringLiteral s>
 constexpr auto operator ""_u() noexcept {
-    constexpr detail::ParsedLiteral<double> p(s.begin(), s.end());
+    constexpr detail::LiteralParser p(s.begin(), s.end());
     return Quantity<double, p.d>(p.factor);
 }
 
 template <detail::StringLiteral s>
 constexpr auto operator ""_uf() noexcept {
-    constexpr detail::ParsedLiteral<float> p(s.begin(), s.end());
-    return Quantity<float, p.d>(p.factor);
+    constexpr detail::LiteralParser p(s.begin(), s.end());
+    return Quantity<float, p.d>(float(p.factor));
 }
 
 } // namespace literals
