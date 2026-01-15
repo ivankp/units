@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <string_view>
 
 namespace units {
 
@@ -255,12 +256,9 @@ public:
         return value * r;
     }
 
-    template <NotAQuantity L>
-    friend constexpr auto operator*(L l, Quantity r) noexcept
-    -> Quantity<decltype(l * r.value), d>
-    {
-        return l * r.value;
-    }
+    template <NotAQuantity L, typename R, Dimensions Rd>
+    friend constexpr auto operator*(L l, Quantity<R, Rd> r) noexcept
+    -> Quantity<decltype(l * r.value), Rd>;
 
     constexpr Quantity& operator*=(auto r) noexcept {
         value *= r;
@@ -277,18 +275,15 @@ public:
     }
 
     template <NotAQuantity R>
-    friend constexpr auto operator/(Quantity l, R r) noexcept
-    -> Quantity<decltype(l.value / r), d>
+    constexpr auto operator/(R r) const noexcept
+    -> Quantity<decltype(value / r), d>
     {
-        return l.value / r;
+        return value / r;
     }
 
-    template <NotAQuantity L>
-    friend constexpr auto operator/(L l, Quantity r) noexcept
-    -> Quantity<decltype(l / r.value), -d>
-    {
-        return l / r.value;
-    }
+    template <NotAQuantity L, typename R, Dimensions Rd>
+    friend constexpr auto operator/(L l, Quantity<R, Rd> r) noexcept
+    -> Quantity<decltype(l / r.value), -Rd>;
 
     constexpr Quantity& operator/=(auto r) noexcept {
         value /= r;
@@ -302,6 +297,20 @@ public:
         return T(std::pow(q.value, n));
     }
 };
+
+template <NotAQuantity L, typename R, Dimensions Rd>
+constexpr auto operator*(L l, Quantity<R, Rd> r) noexcept
+-> Quantity<decltype(l * r.value), Rd>
+{
+    return l * r.value;
+}
+
+template <NotAQuantity L, typename R, Dimensions Rd>
+constexpr auto operator/(L l, Quantity<R, Rd> r) noexcept
+-> Quantity<decltype(l / r.value), -Rd>
+{
+    return l / r.value;
+}
 
 template <typename T>
 Quantity(T x) -> Quantity<T, {}>;
