@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cmath>
-#include <type_traits>
 
 namespace units {
 
@@ -147,16 +146,16 @@ template <typename T, Dimensions d>
 class Quantity;
 
 template <typename T>
-struct IsQuantity : std::false_type { };
+constexpr bool isQuantity = false;
 
 template <typename T, Dimensions d>
-struct IsQuantity<Quantity<T, d>> : std::true_type { };
+constexpr bool isQuantity<Quantity<T, d>> = true;
 
 template <typename T>
-concept AQuantity = IsQuantity<T>::value;
+concept AQuantity = isQuantity<T>;
 
 template <typename T>
-concept NotAQuantity = !IsQuantity<T>::value;
+concept NotAQuantity = !isQuantity<T>;
 
 namespace literals {
 
