@@ -120,12 +120,20 @@ TEST(DivisionInPlace) {
     TEST_EQ(double(l1 / l2), 0.5);
 }
 
-TEST(Exponentiation) {
+TEST(ExponentiationPow) {
     Quantity<float,{0,1,0}> length = 5.f;
     auto area = pow<2>(length);
     static_assert(std::is_same_v<decltype(area), Quantity<float,{0,2,0}>>);
     double value = area / Quantity<int,{0,2,0}>(1);
     TEST_EQ(value, 25);
+}
+
+TEST(ExponentiationRoot) {
+    Quantity<float,{0,3,0}> volume = 125.f;
+    auto length = root<3>(volume);
+    static_assert(std::is_same_v<decltype(length), Quantity<float,{0,1,0}>>);
+    double value = length / Quantity<int,{0,1,0}>(1);
+    TEST_EQ(value, 5);
 }
 
 TEST(CompoundQuantity) {

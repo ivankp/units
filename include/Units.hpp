@@ -294,7 +294,36 @@ public:
 
     template <dim_t n>
     friend constexpr Quantity<T, d * n> pow(Quantity q) noexcept {
-        return T(std::pow(q.value, n));
+        if constexpr (n == 1) {
+            return q;
+        } else if constexpr (n == -1) {
+            return T(1. / q.value);
+        } if constexpr (n == 2) {
+            return T(q.value * q.value);
+        } else if constexpr (n == -2) {
+            return T(1. / (q.value * q.value));
+        } else {
+            return T(std::pow(q.value, n));
+        }
+    }
+
+    template <dim_t n>
+    friend constexpr Quantity<T, d / n> root(Quantity q) noexcept {
+        if constexpr (n == 1) {
+            return q;
+        } else if constexpr (n == -1) {
+            return T(1. / q.value);
+        } if constexpr (n == 2) {
+            return T(std::sqrt(q.value));
+        } else if constexpr (n == -2) {
+            return T(1. / std::sqrt(q.value));
+        } if constexpr (n == 3) {
+            return T(std::cbrt(q.value));
+        } else if constexpr (n == -3) {
+            return T(1. / std::cbrt(q.value));
+        } else {
+            return T(std::pow(q.value, 1. / n));
+        }
     }
 };
 
