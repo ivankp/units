@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <string_view>
+#include <type_traits>
 
 namespace units {
 
@@ -72,6 +73,63 @@ struct Dimensions {
 };
 
 namespace detail {
+
+struct Identity { };
+
+template <typename T>
+constexpr bool isIdentity = false;
+
+template <>
+constexpr bool isIdentity<Identity> = true;
+
+template <dim_t n, typename T, typename R = Identity>
+constexpr auto Pow(const T& base, const R& result = Identity{})
+noexcept(std::is_arithmetic_v<T>)
+{
+    if constexpr (n == 0) {
+        return 1;
+    } else if constexpr (n < 0) {
+        return 1. / Pow<-n>(base, result);
+    } else {
+        constexpr bool odd = n & 1;
+        constexpr dim_t half = n >> 1;
+
+        if constexpr (!half) {
+            if constexpr (!odd) {
+                return result;
+            } else if constexpr (isIdentity<R>) {
+                return base;
+            } else {
+                return result * base;
+            }
+        } else {
+            if constexpr (!odd) {
+                return Pow<half>(base * base, result);
+            } else if constexpr (isIdentity<R>) {
+                return Pow<half>(base * base, base);
+            } else {
+                return Pow<half>(base * base, result * base);
+            }
+        }
+    }
+}
+
+template <dim_t n>
+constexpr auto Root(const auto& x) noexcept {
+    if constexpr (n == 0) {
+        return 1;
+    } else if constexpr (n < 0) {
+        return 1. / Root<-n>(x);
+    } else if constexpr (n == 1) {
+        return x;
+    } if constexpr (n == 2) {
+        return std::sqrt(x);
+    } if constexpr (n == 3) {
+        return std::cbrt(x);
+    } else {
+        return std::pow(x, 1. / n);
+    }
+}
 
 template <unsigned N>
 struct StringLiteral {
@@ -174,12 +232,24 @@ constexpr auto operator ""_uf() noexcept {
 
 } // namespace literals
 
+namespace detail {
+
+template <Dimensions d, typename T>
+constexpr Quantity<T, d> Make(T v) noexcept {
+    return v;
+}
+
+} // namespace detail
+
 template <NotAQuantity T, Dimensions d>
 class Quantity<T, d> {
     T value;
 
     template <typename, Dimensions>
     friend class Quantity;
+
+    template <Dimensions dd, typename V>
+    friend constexpr Quantity<V, dd> detail::Make(V v) noexcept;
 
 public:
     // TODO: private constructors
@@ -293,37 +363,13 @@ public:
     // Exponentiation ----------------------------------------------------------
 
     template <dim_t n>
-    friend constexpr Quantity<T, d * n> pow(Quantity q) noexcept {
-        if constexpr (n == 1) {
-            return q;
-        } else if constexpr (n == -1) {
-            return T(1. / q.value);
-        } if constexpr (n == 2) {
-            return T(q.value * q.value);
-        } else if constexpr (n == -2) {
-            return T(1. / (q.value * q.value));
-        } else {
-            return T(std::pow(q.value, n));
-        }
+    friend constexpr auto Pow(Quantity q) noexcept(std::is_arithmetic_v<T>) {
+        return detail::Make<(d * n)>(detail::Pow<n>(q.value));
     }
 
     template <dim_t n>
-    friend constexpr Quantity<T, d / n> root(Quantity q) noexcept {
-        if constexpr (n == 1) {
-            return q;
-        } else if constexpr (n == -1) {
-            return T(1. / q.value);
-        } if constexpr (n == 2) {
-            return T(std::sqrt(q.value));
-        } else if constexpr (n == -2) {
-            return T(1. / std::sqrt(q.value));
-        } if constexpr (n == 3) {
-            return T(std::cbrt(q.value));
-        } else if constexpr (n == -3) {
-            return T(1. / std::cbrt(q.value));
-        } else {
-            return T(std::pow(q.value, 1. / n));
-        }
+    friend constexpr auto Root(Quantity q) noexcept {
+        return detail::Make<(d / n)>(detail::Root<n>(q.value));
     }
 };
 

@@ -2,10 +2,57 @@
 
 #include "Units.hpp"
 
+#include <array>
 #include <type_traits>
+
+struct vec2 {
+    double x, y;
+};
+
+constexpr double operator*(const vec2& a, const vec2& b) noexcept {
+    return a.x * b.x + a.y * b.y;
+}
 
 using namespace units;
 using namespace units::literals;
+
+TEST(Pow) {
+    using units::detail::Pow;
+    {
+        const auto x = "x";
+        auto r = Pow<0>(x); // anything to the power 0 is 1
+        static_assert(std::is_same_v<decltype(r), int>);
+        TEST_EQ(r, 1);
+    } {
+        const auto x = 3;
+        auto r = Pow<4>(x);
+        static_assert(std::is_same_v<decltype(r), int>);
+        TEST_EQ(r, 81);
+    } {
+        const auto x = 3;
+        auto r = Pow<-3>(x);
+        static_assert(std::is_same_v<decltype(r), double>);
+        TEST_EQ(r, 1./27);
+    } {
+        const vec2 x { 3., 5. };
+        auto r = Pow<2>(x);
+        static_assert(std::is_same_v<decltype(r), double>);
+        TEST_EQ(r, 34.);
+    } {
+        const vec2 x { 3., 5. };
+        auto r = Pow<-2>(x);
+        static_assert(std::is_same_v<decltype(r), double>);
+        TEST_EQ(r, 1./34.);
+    } {
+        auto r = Pow<15>(2.f);
+        static_assert(std::is_same_v<decltype(r), float>);
+        TEST_EQ(r, 32'768);
+    } {
+        auto r = Pow<31>(2ul);
+        static_assert(std::is_same_v<decltype(r), unsigned long>);
+        TEST_EQ(r, 2'147'483'648);
+    }
+}
 
 TEST(Size) {
     static_assert(sizeof(Quantity<double,{0,1,0}>) == sizeof(double));
@@ -121,19 +168,35 @@ TEST(DivisionInPlace) {
 }
 
 TEST(ExponentiationPow) {
-    Quantity<float,{0,1,0}> length = 5.f;
-    auto area = pow<2>(length);
-    static_assert(std::is_same_v<decltype(area), Quantity<float,{0,2,0}>>);
-    double value = area / Quantity<int,{0,2,0}>(1);
-    TEST_EQ(value, 25);
+    {
+        Quantity<float,{0,1,0}> length = 5.f;
+        auto area = Pow<2>(length);
+        static_assert(std::is_same_v<decltype(area), Quantity<float,{0,2,0}>>);
+        double value = area / Quantity<int,{0,2,0}>(1);
+        TEST_EQ(value, 25);
+    } {
+        Quantity<vec2,{0,1,-1}> v = vec2 { 3, 7 };
+        auto speed2 = Pow<2>(v);
+        static_assert(std::is_same_v<decltype(speed2), Quantity<double,{0,2,-2}>>);
+        double value = speed2 / Quantity<int,{0,2,-2}>(1);
+        TEST_EQ(value, 58.);
+    }
 }
 
 TEST(ExponentiationRoot) {
-    Quantity<float,{0,3,0}> volume = 125.f;
-    auto length = root<3>(volume);
-    static_assert(std::is_same_v<decltype(length), Quantity<float,{0,1,0}>>);
-    double value = length / Quantity<int,{0,1,0}>(1);
-    TEST_EQ(value, 5);
+    {
+        Quantity<float,{0,3,0}> volume = 125.f;
+        auto length = Root<3>(volume);
+        static_assert(std::is_same_v<decltype(length), Quantity<float,{0,1,0}>>);
+        double value = length / Quantity<int,{0,1,0}>(1);
+        TEST_EQ(value, 5);
+    } {
+        Quantity<vec2,{0,1,-1}> v = vec2 { 3, 7 };
+        auto speedInv = Root<-2>(Pow<2>(v));
+        static_assert(std::is_same_v<decltype(speedInv), Quantity<double,{0,-1,1}>>);
+        double value = speedInv / Quantity<int,{0,-1,1}>(1);
+        TEST_EQ(value, 1. / std::sqrt(58.));
+    }
 }
 
 TEST(CompoundQuantity) {
@@ -144,7 +207,7 @@ TEST(CompoundQuantity) {
     static_assert(std::is_same_v<decltype(v), Speed<double>>);
     [](Energy<double> E){
         TEST_EQ(double(E / Energy<double>(1)), 2.52);
-    }(m * pow<2>(v));
+    }(m * Pow<2>(v));
 }
 
 TEST(Inverse) {
