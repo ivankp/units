@@ -13,8 +13,9 @@ constexpr double operator*(const vec2& a, const vec2& b) noexcept {
     return a.x * b.x + a.y * b.y;
 }
 
-using namespace units;
+using units::Quantity, units::MakeQuantity;
 using namespace units::literals;
+using namespace units::quantities;
 
 TEST(Pow) {
     using units::detail::Pow;

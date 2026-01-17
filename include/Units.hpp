@@ -400,6 +400,8 @@ constexpr auto operator/(L l, Quantity<R, Rd> r) noexcept
 template <typename T>
 Quantity(T x) -> Quantity<T, {}>;
 
+namespace quantities {
+
 #define DefineQuantity(M, L, T, NAME) \
     template <typename X> \
     using NAME = Quantity<X, {dim_t(M), dim_t(L), dim_t(T)}>;
@@ -438,5 +440,7 @@ AliasQuantity(Weight, Force)
 AliasQuantity(Work, Energy)
 
 #undef AliasQuantity
+
+} // namespace quantities
 
 } // namespace units
