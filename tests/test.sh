@@ -27,6 +27,13 @@ for tests in "${suite[@]}"; do
     done
 
     for comp in "${compilers[@]}"; do
+        if [ "$comp" = "g++" ]; then
+            nerr='-fmax-errors=3'
+        elif [ "$comp" = "clang++" ]; then
+            nerr='-ferror-limit=3'
+        else
+            unset nerr
+        fi
     for std in "${stds[@]}"; do
         exe="build/${tests%%.cpp}-$std-$comp"
         exes+=("$exe")
@@ -37,6 +44,7 @@ for tests in "${suite[@]}"; do
                     /Fe"$exe" "${tests}")
             else
                 cmd=("$comp" -std="$std" -O3 -Wall -Wextra -Werror -pedantic \
+                    $nerr \
                     -I. -I../include \
                     "${tests}" -o "$exe")
             fi

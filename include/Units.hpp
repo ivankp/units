@@ -83,7 +83,7 @@ template <>
 constexpr bool isIdentity<Identity> = true;
 
 template <dim_t n, typename T, typename R = Identity>
-constexpr auto Pow(const T& base, const R& result = Identity{})
+constexpr auto Pow(const T& base, const R& result = {})
 noexcept(std::is_arithmetic_v<T>)
 {
     if constexpr (n == 0) {
@@ -216,30 +216,26 @@ concept AQuantity = isQuantity<T>;
 template <typename T>
 concept NotAQuantity = !isQuantity<T>;
 
+template <Dimensions d, typename T>
+constexpr Quantity<T, d> MakeQuantity(T value) noexcept {
+    return value;
+}
+
 namespace literals {
 
 template <detail::StringLiteral s>
 constexpr auto operator ""_u() noexcept {
     constexpr detail::LiteralParser p(s.begin(), s.end());
-    return Quantity<double, p.d>(p.factor);
+    return MakeQuantity<p.d>(p.factor);
 }
 
 template <detail::StringLiteral s>
 constexpr auto operator ""_uf() noexcept {
     constexpr detail::LiteralParser p(s.begin(), s.end());
-    return Quantity<float, p.d>(float(p.factor));
+    return MakeQuantity<p.d>(float(p.factor));
 }
 
 } // namespace literals
-
-namespace detail {
-
-template <Dimensions d, typename T>
-constexpr Quantity<T, d> Make(T v) noexcept {
-    return v;
-}
-
-} // namespace detail
 
 template <NotAQuantity T, Dimensions d>
 class Quantity<T, d> {
@@ -248,14 +244,28 @@ class Quantity<T, d> {
     template <typename, Dimensions>
     friend class Quantity;
 
-    template <Dimensions dd, typename V>
-    friend constexpr Quantity<V, dd> detail::Make(V v) noexcept;
+    template <Dimensions d_, typename T_>
+    friend constexpr Quantity<T_, d_> MakeQuantity(T_) noexcept;
+
+    // Prevent default initialization
+    Quantity() = delete;
+
+    // Only friends can use implicit conversion for dimensionful quantities
+    constexpr Quantity(T value) noexcept requires ((bool)d) : value(value) { }
 
 public:
-    // TODO: private constructors
-    constexpr Quantity() noexcept: value{} { }
-    constexpr Quantity(T value) noexcept: value(value) { }
+    // Implicit converting constructor for dimensionless quantities
+    constexpr Quantity(T value) noexcept requires (!d) : value(value) { }
 
+    template <typename R>
+    constexpr Quantity(Quantity<R, d> r) noexcept : value(r.value) { }
+
+    template <typename R>
+    constexpr Quantity& operator=(Quantity<R, d> r) noexcept {
+        value = r.value;
+    }
+
+    // Conversion operator for dimensionless quantities
     constexpr operator T() const noexcept requires (!d) {
         return value;
     }
@@ -364,12 +374,12 @@ public:
 
     template <dim_t n>
     friend constexpr auto Pow(Quantity q) noexcept(std::is_arithmetic_v<T>) {
-        return detail::Make<(d * n)>(detail::Pow<n>(q.value));
+        return MakeQuantity<(d * n)>(detail::Pow<n>(q.value));
     }
 
     template <dim_t n>
     friend constexpr auto Root(Quantity q) noexcept {
-        return detail::Make<(d / n)>(detail::Root<n>(q.value));
+        return MakeQuantity<(d / n)>(detail::Root<n>(q.value));
     }
 };
 

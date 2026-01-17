@@ -60,44 +60,45 @@ TEST(Size) {
 }
 
 TEST(ImplicitConversion) {
-    Quantity quantity = 5.;
-    double value = quantity;
-    TEST_EQ(value, 5.);
+    Quantity nounits = 5;
+    static_assert(std::is_same_v<decltype(nounits), Quantity<int,{0,0,0}>>);
+    double value = nounits;
+    TEST_EQ(value, 5);
 }
 
 TEST(Addition) {
-    Quantity<double,{1,0,0}> a = 5.;
-    Quantity<float,{1,0,0}> b = 2.;
+    auto a = MakeQuantity<{1,0,0},double>(5.);
+    auto b = MakeQuantity<{1,0,0},float>(2.);
     auto c = a + b;
     static_assert(std::is_same_v<decltype(c), Quantity<double,{1,0,0}>>);
 }
 
 TEST(Addition2) {
-    Quantity<double,{1,0,0}> a = 5.;
-    Quantity<float,{1,0,0}> b = 2.;
+    auto a = MakeQuantity<{1,0,0},double>(5.);
+    auto b = MakeQuantity<{1,0,0},float>(2.);
     auto c = a + b;
     a += b;
     TEST_EQ(a, c);
 }
 
 TEST(Subtraction) {
-    Quantity<double,{1,0,0}> a = 5.;
-    Quantity<float,{1,0,0}> b = 2.;
+    auto a = MakeQuantity<{1,0,0},double>(5.);
+    auto b = MakeQuantity<{1,0,0},float>(2.);
     auto c = a - b;
     static_assert(std::is_same_v<decltype(c), Quantity<double,{1,0,0}>>);
 }
 
 TEST(Subtraction2) {
-    Quantity<double,{1,0,0}> a = 5.;
-    Quantity<float,{1,0,0}> b = 2.;
+    auto a = MakeQuantity<{1,0,0},double>(5.);
+    auto b = MakeQuantity<{1,0,0},float>(2.);
     auto c = a - b;
     a -= b;
     TEST_EQ(a, c);
 }
 
 TEST(Comparison) {
-    Quantity<double,{1,0,0}> a = 5.;
-    Quantity<float,{1,0,0}> b = 2.;
+    auto a = MakeQuantity<{1,0,0},double>(5.);
+    auto b = MakeQuantity<{1,0,0},float>(2.);
     TEST_TRUE(a != b);
     TEST_TRUE(b < a);
     TEST_TRUE(a >= b);
@@ -106,23 +107,23 @@ TEST(Comparison) {
 }
 
 TEST(Multiplication) {
-    Quantity<double,{0,1,0}> length = 5.;
-    Quantity<float,{0,0,1}> time = 2.;
+    auto length = MakeQuantity<{0,1,0},double>(5.);
+    auto time = MakeQuantity<{0,0,1},float>(2.);
     auto product = length * time;
     static_assert(std::is_same_v<decltype(product), Quantity<double,{0,1,1}>>);
 }
 
 TEST(Division) {
-    Quantity<double,{0,1,0}> length = 5.;
-    Quantity<float,{0,0,1}> time = 2.f;
+    auto length = MakeQuantity<{0,1,0},double>(5.);
+    auto time = MakeQuantity<{0,0,1},float>(2.f);
     auto speed = length / time;
     static_assert(std::is_same_v<decltype(speed), Quantity<double,{0,1,-1}>>);
-    double value = speed / Quantity<int,{0,1,-1}>(1);
+    double value = speed / MakeQuantity<{0,1,-1}>(1);
     TEST_EQ(value, 2.5);
 }
 
 TEST(MultiplicationWithFactors) {
-    Length<double> l1 = 5;
+    Length<double> l1 = MakeQuantity<{0,1,0}>(5);
     auto l2 = 2. * l1;
     static_assert(std::is_same_v<decltype(l2), Length<double>>);
     auto l3 = l1 * 3.;
@@ -132,7 +133,7 @@ TEST(MultiplicationWithFactors) {
 }
 
 TEST(DivisionWithFactors) {
-    Length<double> l1 = 5;
+    Length<double> l1 = MakeQuantity<{0,1,0}>(5);
     auto l2 = 2 / l1;
     static_assert(std::is_same_v<decltype(l2), Quantity<double,{0,-1,0}>>);
     auto l3 = l1 / 4;
@@ -142,26 +143,28 @@ TEST(DivisionWithFactors) {
 }
 
 TEST(AdditionInPlace) {
-    Length<double> l1 = 5;
-    l1 += Length<float>(3);
-    TEST_EQ(l1, Length<double>(8));
+    Length<double> l1 = MakeQuantity<{0,1,0}>(5);
+    l1 += MakeQuantity<{0,1,0},float>(3);
+    auto l2 = MakeQuantity<{0,1,0}>(8);
+    TEST_EQ(l1, l2);
 }
 
 TEST(SubtractionInPlace) {
-    Length<double> l1 = 5;
-    l1 -= Length<float>(3);
-    TEST_EQ(l1, Length<double>(2));
+    Length<double> l1 = MakeQuantity<{0,1,0}>(5);
+    l1 -= MakeQuantity<{0,1,0},float>(3);
+    auto l2 = MakeQuantity<{0,1,0}>(2);
+    TEST_EQ(l1, l2);
 }
 
 TEST(MultiplicationInPlace) {
-    Length<double> l1 = 5;
+    Length<double> l1 = MakeQuantity<{0,1,0}>(5);
     const auto l2 = l1;
     l1 *= 2;
     TEST_EQ(double(l1 / l2), 2);
 }
 
 TEST(DivisionInPlace) {
-    Length<double> l1 = 5;
+    Length<double> l1 = MakeQuantity<{0,1,0}>(5);
     const auto l2 = l1;
     l1 /= 2;
     TEST_EQ(double(l1 / l2), 0.5);
@@ -169,49 +172,49 @@ TEST(DivisionInPlace) {
 
 TEST(ExponentiationPow) {
     {
-        Quantity<float,{0,1,0}> length = 5.f;
+        auto length = MakeQuantity<{0,1,0},float>(5.f);
         auto area = Pow<2>(length);
         static_assert(std::is_same_v<decltype(area), Quantity<float,{0,2,0}>>);
-        double value = area / Quantity<int,{0,2,0}>(1);
+        double value = area / MakeQuantity<{0,2,0}>(1);
         TEST_EQ(value, 25);
     } {
-        Quantity<vec2,{0,1,-1}> v = vec2 { 3, 7 };
+        auto v = MakeQuantity<{0,1,-1}>(vec2{ 3, 7 });
         auto speed2 = Pow<2>(v);
         static_assert(std::is_same_v<decltype(speed2), Quantity<double,{0,2,-2}>>);
-        double value = speed2 / Quantity<int,{0,2,-2}>(1);
+        double value = speed2 / MakeQuantity<{0,2,-2}>(1);
         TEST_EQ(value, 58.);
     }
 }
 
 TEST(ExponentiationRoot) {
     {
-        Quantity<float,{0,3,0}> volume = 125.f;
+        auto volume = MakeQuantity<{0,3,0},float>(125.f);
         auto length = Root<3>(volume);
         static_assert(std::is_same_v<decltype(length), Quantity<float,{0,1,0}>>);
-        double value = length / Quantity<int,{0,1,0}>(1);
+        double value = length / MakeQuantity<{0,1,0}>(1);
         TEST_EQ(value, 5);
     } {
-        Quantity<vec2,{0,1,-1}> v = vec2 { 3, 7 };
+        auto v = MakeQuantity<{0,1,-1}>(vec2{ 3, 4 });
         auto speedInv = Root<-2>(Pow<2>(v));
         static_assert(std::is_same_v<decltype(speedInv), Quantity<double,{0,-1,1}>>);
-        double value = speedInv / Quantity<int,{0,-1,1}>(1);
-        TEST_EQ(value, 1. / std::sqrt(58.));
+        double value = speedInv / MakeQuantity<{0,-1,1}>(1);
+        TEST_EQ(value, 0.2);
     }
 }
 
 TEST(CompoundQuantity) {
-    Mass<double> m = 7;
-    Length<double> l = 3;
-    Time<double> t = 5;
+    Mass<double> m = MakeQuantity<{1,0,0}>(7);
+    Length<double> l = MakeQuantity<{0,1,0}>(3);
+    Time<double> t = MakeQuantity<{0,0,1}>(5);
     auto v = l/t;
     static_assert(std::is_same_v<decltype(v), Speed<double>>);
     [](Energy<double> E){
-        TEST_EQ(double(E / Energy<double>(1)), 2.52);
+        TEST_EQ(double(E / MakeQuantity<{1,2,-2}>(1)), 2.52);
     }(m * Pow<2>(v));
 }
 
 TEST(Inverse) {
-    Time<double> time = 5.;
+    Time<double> time = MakeQuantity<{0,0,1}>(5);
     auto freq = 1 / time;
     static_assert(std::is_same_v<decltype(freq), Frequency<double>>);
 }
