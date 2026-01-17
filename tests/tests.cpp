@@ -56,13 +56,13 @@ TEST(Pow) {
 }
 
 TEST(Size) {
-    static_assert(sizeof(Quantity<double,{0,1,0}>) == sizeof(double));
-    static_assert(sizeof(Quantity<float ,{0,1,0}>) == sizeof(float ));
+    static_assert(sizeof(Quantity<{0,1,0},double>) == sizeof(double));
+    static_assert(sizeof(Quantity<{0,1,0},float >) == sizeof(float ));
 }
 
 TEST(ImplicitConversion) {
     Quantity nounits = 5;
-    static_assert(std::is_same_v<decltype(nounits), Quantity<int,{0,0,0}>>);
+    static_assert(std::is_same_v<decltype(nounits), Quantity<{0,0,0},int>>);
     double value = nounits;
     TEST_EQ(value, 5);
 }
@@ -71,7 +71,7 @@ TEST(Addition) {
     auto a = MakeQuantity<{1,0,0},double>(5.);
     auto b = MakeQuantity<{1,0,0},float>(2.);
     auto c = a + b;
-    static_assert(std::is_same_v<decltype(c), Quantity<double,{1,0,0}>>);
+    static_assert(std::is_same_v<decltype(c), Quantity<{1,0,0},double>>);
 }
 
 TEST(Addition2) {
@@ -86,7 +86,7 @@ TEST(Subtraction) {
     auto a = MakeQuantity<{1,0,0},double>(5.);
     auto b = MakeQuantity<{1,0,0},float>(2.);
     auto c = a - b;
-    static_assert(std::is_same_v<decltype(c), Quantity<double,{1,0,0}>>);
+    static_assert(std::is_same_v<decltype(c), Quantity<{1,0,0},double>>);
 }
 
 TEST(Subtraction2) {
@@ -111,14 +111,14 @@ TEST(Multiplication) {
     auto length = MakeQuantity<{0,1,0},double>(5.);
     auto time = MakeQuantity<{0,0,1},float>(2.);
     auto product = length * time;
-    static_assert(std::is_same_v<decltype(product), Quantity<double,{0,1,1}>>);
+    static_assert(std::is_same_v<decltype(product), Quantity<{0,1,1},double>>);
 }
 
 TEST(Division) {
     auto length = MakeQuantity<{0,1,0},double>(5.);
     auto time = MakeQuantity<{0,0,1},float>(2.f);
     auto speed = length / time;
-    static_assert(std::is_same_v<decltype(speed), Quantity<double,{0,1,-1}>>);
+    static_assert(std::is_same_v<decltype(speed), Quantity<{0,1,-1},double>>);
     double value = speed / MakeQuantity<{0,1,-1}>(1);
     TEST_EQ(value, 2.5);
 }
@@ -136,7 +136,7 @@ TEST(MultiplicationWithFactors) {
 TEST(DivisionWithFactors) {
     Length<double> l1 = MakeQuantity<{0,1,0}>(5);
     auto l2 = 2 / l1;
-    static_assert(std::is_same_v<decltype(l2), Quantity<double,{0,-1,0}>>);
+    static_assert(std::is_same_v<decltype(l2), Quantity<{0,-1,0},double>>);
     auto l3 = l1 / 4;
     static_assert(std::is_same_v<decltype(l3), Length<double>>);
     TEST_EQ(double(l2 * l1), 2);
@@ -175,13 +175,13 @@ TEST(ExponentiationPow) {
     {
         auto length = MakeQuantity<{0,1,0},float>(5.f);
         auto area = Pow<2>(length);
-        static_assert(std::is_same_v<decltype(area), Quantity<float,{0,2,0}>>);
+        static_assert(std::is_same_v<decltype(area), Quantity<{0,2,0},float>>);
         double value = area / MakeQuantity<{0,2,0}>(1);
         TEST_EQ(value, 25);
     } {
         auto v = MakeQuantity<{0,1,-1}>(vec2{ 3, 7 });
         auto speed2 = Pow<2>(v);
-        static_assert(std::is_same_v<decltype(speed2), Quantity<double,{0,2,-2}>>);
+        static_assert(std::is_same_v<decltype(speed2), Quantity<{0,2,-2},double>>);
         double value = speed2 / MakeQuantity<{0,2,-2}>(1);
         TEST_EQ(value, 58.);
     }
@@ -191,13 +191,13 @@ TEST(ExponentiationRoot) {
     {
         auto volume = MakeQuantity<{0,3,0},float>(125.f);
         auto length = Root<3>(volume);
-        static_assert(std::is_same_v<decltype(length), Quantity<float,{0,1,0}>>);
+        static_assert(std::is_same_v<decltype(length), Quantity<{0,1,0},float>>);
         double value = length / MakeQuantity<{0,1,0}>(1);
         TEST_EQ(value, 5);
     } {
         auto v = MakeQuantity<{0,1,-1}>(vec2{ 3, 4 });
         auto speedInv = Root<-2>(Pow<2>(v));
-        static_assert(std::is_same_v<decltype(speedInv), Quantity<double,{0,-1,1}>>);
+        static_assert(std::is_same_v<decltype(speedInv), Quantity<{0,-1,1},double>>);
         double value = speedInv / MakeQuantity<{0,-1,1}>(1);
         TEST_EQ(value, 0.2);
     }
