@@ -162,19 +162,19 @@ struct LiteralParser {
 
     constexpr LiteralParser(const char* a, const char* const e) {
         char cat = 0, catPrev = 0;
-        // bool div = false;
+        bool div = false;
         bool minus = false;
         bool num = false;
         dim_t* dim = nullptr;
         int n = 1;
 
         auto consume = [&] {
-            // if (div)
-            //     n = -n;
+            if (div)
+                n = -n;
             if (minus)
                 n = -n;
             *dim += n;
-            // div = false;
+            div = false;
             minus = false;
             num = false;
             dim = nullptr;
@@ -190,13 +190,8 @@ struct LiteralParser {
                 cat = '0';
             } else if (c == ' ' || c == '\t' || c == '\0') {
                 cat = ' ';
-            } else if (c == '-') {
+            } else if (c == '-' || c == '/') {
                 cat = c;
-            // } else if (c == '/') {
-            //     if (div || minus)
-            //         throw "Unexpected division in unit literal";
-            //     cat = c;
-            //     div = true;
             } else {
                 throw "Unexpected character in unit literal";
             }
@@ -224,6 +219,9 @@ struct LiteralParser {
                     }
                     num = true;
                 } break;
+                case '/': {
+                    div = true;
+                } break;
                 default: ;
             }
 
@@ -237,11 +235,18 @@ struct LiteralParser {
                         throw "Unexpected minus in unit literal";
                     minus = true;
                 } break;
+                case '/': {
+                    if (div || minus)
+                        throw "Unexpected division in unit literal";
+                } break;
                 default: ;
             }
 
-            if (catPrev && cat == 'a')
+            if (catPrev && (cat == '/' || (cat == 'a' && !div))) {
+                if (minus && !num)
+                    throw "Unexpected minus without number in unit literal";
                 consume();
+            }
 
             catPrev = cat;
             a = b;
