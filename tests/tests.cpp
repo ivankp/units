@@ -233,9 +233,24 @@ TEST(LiteralFloat) {
     static_assert(std::is_same_v<decltype(1 * "s"_uf), Time<float>>);
 }
 
-void type(auto);
-
 TEST(Literals2) {
-    type("m/s"_u);
-    // static_assert(std::is_same_v<decltype("m/s"_u), Speed<double>>);
+    static_assert(std::is_same_v<decltype("m"_u), Length<double>>);
+    static_assert(std::is_same_v<decltype("m m"_u), Area<double>>);
+    static_assert(std::is_same_v<decltype("m m m"_u), Volume<double>>);
+    static_assert(std::is_same_v<decltype("m s"_u), Quantity<{0,1,1},double>>);
+    static_assert(std::is_same_v<decltype("m1"_u), Length<double>>);
+    static_assert(std::is_same_v<decltype("m2"_u), Area<double>>);
+    static_assert(std::is_same_v<decltype("m3"_u), Volume<double>>);
+    static_assert(std::is_same_v<decltype("m0"_u), Quantity<{0,0,0},double>>);
+    static_assert("m0"_u == 1.);
+    static_assert("kg0"_u == 1.);
+    static_assert(""_u == 1.);
+    static_assert(std::is_same_v<decltype("s-1"_u), Frequency<double>>);
+    static_assert(std::is_same_v<decltype("s -1"_u), Frequency<double>>);
+    static_assert(std::is_same_v<decltype("s- 1"_u), Frequency<double>>);
+    static_assert(std::is_same_v<decltype("s - 1"_u), Frequency<double>>);
+    static_assert(std::is_same_v<decltype("m s-1"_u), Speed<double>>);
+    static_assert(std::is_same_v<decltype("s-1 m"_u), Speed<double>>);
+    static_assert(std::is_same_v<decltype("s-1m"_u), Speed<double>>);
+    static_assert(std::is_same_v<decltype("s- 1m"_u), Speed<double>>);
 }

@@ -162,48 +162,41 @@ struct LiteralParser {
 
     constexpr LiteralParser(const char* a, const char* const e) {
         char cat = 0, catPrev = 0;
-        bool div = false;
+        // bool div = false;
         bool minus = false;
         bool num = false;
         dim_t* dim = nullptr;
         int n = 1;
 
-        auto set = [&] {
-            if (dim) {
-                *dim += n;
-                div = false;
-                minus = false;
-                num = false;
-                dim = nullptr;
-                n = 1;
-            }
+        auto consume = [&] {
+            // if (div)
+            //     n = -n;
+            if (minus)
+                n = -n;
+            *dim += n;
+            // div = false;
+            minus = false;
+            num = false;
+            dim = nullptr;
+            n = 1;
         };
 
         const char* b = a;
         for (; b < e; ++b) {
             const char c = *b;
             if (('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z')) {
-                if (!div && cat != 'a')
-                    set();
                 cat = 'a';
             } else if ('0' <= c && c <= '9') {
-                if (!dim || num)
-                    throw "Unexpected number in unit literal";
                 cat = '0';
             } else if (c == ' ' || c == '\t' || c == '\0') {
                 cat = ' ';
             } else if (c == '-') {
-                if (!dim || minus || num)
-                    throw "Unexpected minus in unit literal";
                 cat = c;
-                minus = true;
-            } else if (c == '/') {
-                if (div || minus)
-                    throw "Unexpected division in unit literal";
-                if (catPrev != 0)
-                    set();
-                cat = c;
-                div = true;
+            // } else if (c == '/') {
+            //     if (div || minus)
+            //         throw "Unexpected division in unit literal";
+            //     cat = c;
+            //     div = true;
             } else {
                 throw "Unexpected character in unit literal";
             }
@@ -226,24 +219,35 @@ struct LiteralParser {
                 } break;
                 case '0': {
                     n = 0;
-                    while (a < b) {
-                        const char c = *a;
-                        (n *= 10) += c - '0';
+                    for (; a < b; ++a) {
+                        (n *= 10) += *a - '0';
                     }
-                    if (div)
-                        n = -n;
-                    if (minus)
-                        n = -n;
                     num = true;
                 } break;
                 default: ;
             }
 
+            switch (cat) {
+                case '0': {
+                    if (!dim || num)
+                        throw "Unexpected number in unit literal";
+                } break;
+                case '-': {
+                    if (!dim || minus || num)
+                        throw "Unexpected minus in unit literal";
+                    minus = true;
+                } break;
+                default: ;
+            }
+
+            if (catPrev && cat == 'a')
+                consume();
+
             catPrev = cat;
             a = b;
         }
-        set();
-        // TODO: how to determine when a new unit starts?
+        if (dim)
+            consume();
     }
 };
 
