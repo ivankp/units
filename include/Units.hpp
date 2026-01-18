@@ -169,6 +169,8 @@ struct LiteralParser {
         int n = 1;
 
         auto consume = [&] {
+            if (minus && !num)
+                throw "Unexpected minus without number in unit literal";
             if (div)
                 n = -n;
             if (minus)
@@ -191,6 +193,8 @@ struct LiteralParser {
             } else if (c == ' ' || c == '\t' || c == '\0') {
                 cat = ' ';
             } else if (c == '-' || c == '/') {
+                if (cat == c)
+                    throw "Unexpected repeated operator in unit literal";
                 cat = c;
             } else {
                 throw "Unexpected character in unit literal";
@@ -242,11 +246,8 @@ struct LiteralParser {
                 default: ;
             }
 
-            if (catPrev && (cat == '/' || (cat == 'a' && !div))) {
-                if (minus && !num)
-                    throw "Unexpected minus without number in unit literal";
+            if (catPrev && (cat == '/' || (cat == 'a' && !div)))
                 consume();
-            }
 
             catPrev = cat;
             a = b;
