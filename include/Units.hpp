@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cmath>
 #include <string_view>
 #include <type_traits>
@@ -80,13 +81,17 @@ constexpr bool isIdentity = false;
 template <>
 constexpr bool isIdentity<Identity> = true;
 
-constexpr double pow(double base, unsigned n) noexcept {
+constexpr double pow(double base, int n) noexcept {
     double result = 1;
-    while (n > 0) {
-        if (n & 1)
-            result *= base;
-        base *= base;
-        n >>= 1;
+    if (n < 0) {
+        return 1. / pow(base, -n);
+    } else {
+        while (n > 0) {
+            if (n & 1)
+                result *= base;
+            base *= base;
+            n >>= 1;
+        }
     }
     return result;
 }
@@ -393,8 +398,7 @@ constexpr UnitDef unitsDefs[] { ALL_UNITS };
 
 #undef ALL_UNITS
 
-constexpr unsigned numUnits = std::size(unitsDefs);
-static_assert(numUnits != unsigned(-1));
+constexpr std::size_t numUnits = std::size(unitsDefs);
 
 template <unsigned N>
 struct StringLiteral {
@@ -422,7 +426,7 @@ struct LiteralParser {
         bool div = false;
         bool minus = false;
         bool num = false;
-        unsigned unit = unsigned(-1);
+        std::size_t unit = numUnits;
         int n = 1;
 
         auto consume = [&] {
@@ -441,7 +445,7 @@ struct LiteralParser {
             div = false;
             minus = false;
             num = false;
-            unit = unsigned(-1);
+            unit = numUnits;
             n = 1;
         };
 
@@ -468,13 +472,11 @@ struct LiteralParser {
             switch (catPrev) {
                 case 'a': {
                     const std::string_view token(a, b);
-                    for (unsigned i = 0; i < numUnits; ++i) {
-                        if (token == unitsNames[i]) {
-                            unit = i;
+                    for (unit = 0; unit < numUnits; ++unit) {
+                        if (token == unitsNames[unit])
                             break;
-                        }
                     }
-                    if (unit == unsigned(-1))
+                    if (unit == numUnits)
                         throw "Unexpected string in unit literal";
                 } break;
                 case '0': {
@@ -492,11 +494,11 @@ struct LiteralParser {
 
             switch (cat) {
                 case '0': {
-                    if (unit == unsigned(-1) || num)
+                    if (unit == numUnits || num)
                         throw "Unexpected number in unit literal";
                 } break;
                 case '-': {
-                    if (unit == unsigned(-1) || minus || num)
+                    if (unit == numUnits || minus || num)
                         throw "Unexpected minus in unit literal";
                     minus = true;
                 } break;
@@ -513,7 +515,7 @@ struct LiteralParser {
             catPrev = cat;
             a = b;
         }
-        if (unit != unsigned(-1))
+        if (unit != numUnits)
             consume();
     }
 };

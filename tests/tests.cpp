@@ -262,7 +262,6 @@ TEST(Literals2) {
     static_assert(std::is_same_v<decltype("/s-1"_u), Time<double>>);
     static_assert(std::is_same_v<decltype(Root<2>("m2"_u)), Length<double>>);
 
-
     static_assert(1e3 * "g"_u == "kg"_u);
     static_assert("psi / Pa"_u == 6895);
 }
