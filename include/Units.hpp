@@ -129,125 +129,6 @@ constexpr auto Root(const auto& x) noexcept {
     }
 }
 
-template <unsigned N>
-struct StringLiteral {
-    char s[N]{};
-
-    constexpr StringLiteral(const char(&arr)[N]) noexcept {
-        for (unsigned i = 0; i < N; ++i)
-            s[i] = arr[i];
-    }
-
-    constexpr const char* begin() const noexcept {
-        return s;
-    }
-
-    constexpr const char* end() const noexcept {
-        return s + N;
-    }
-};
-
-struct LiteralParser {
-    Dimensions d { };
-    double factor = 1;
-
-    constexpr LiteralParser(const char* a, const char* const e) {
-        char cat = 0, catPrev = 0;
-        bool div = false;
-        bool minus = false;
-        bool num = false;
-        dim_t* dim = nullptr;
-        int n = 1;
-
-        auto consume = [&] {
-            if (minus && !num)
-                throw "Unexpected minus without number in unit literal";
-            if (div)
-                n = -n;
-            if (minus)
-                n = -n;
-            *dim += n;
-            div = false;
-            minus = false;
-            num = false;
-            dim = nullptr;
-            n = 1;
-        };
-
-        const char* b = a;
-        for (; b < e; ++b) {
-            const char c = *b;
-            if (('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z')) {
-                cat = 'a';
-            } else if ('0' <= c && c <= '9') {
-                cat = '0';
-            } else if (c == ' ' || c == '\t' || c == '\0') {
-                cat = ' ';
-            } else if (c == '-' || c == '/') {
-                if (cat == c)
-                    throw "Unexpected repeated operator in unit literal";
-                cat = c;
-            } else {
-                throw "Unexpected character in unit literal";
-            }
-
-            if (cat == catPrev)
-                continue;
-
-            switch (catPrev) {
-                case 'a': {
-                    const std::string_view token(a, b);
-                    if (token == "kg") {
-                        dim = &d.mass;
-                    } else if (token == "m") {
-                        dim = &d.length;
-                    } else if (token == "s") {
-                        dim = &d.time;
-                    } else {
-                        throw "Unexpected string in unit literal";
-                    }
-                } break;
-                case '0': {
-                    n = 0;
-                    for (; a < b; ++a) {
-                        (n *= 10) += *a - '0';
-                    }
-                    num = true;
-                } break;
-                case '/': {
-                    div = true;
-                } break;
-                default: ;
-            }
-
-            switch (cat) {
-                case '0': {
-                    if (!dim || num)
-                        throw "Unexpected number in unit literal";
-                } break;
-                case '-': {
-                    if (!dim || minus || num)
-                        throw "Unexpected minus in unit literal";
-                    minus = true;
-                } break;
-                case '/': {
-                    if (div || minus)
-                        throw "Unexpected division in unit literal";
-                } break;
-                default: ;
-            }
-
-            if (catPrev && (cat == '/' || (cat == 'a' && !div)))
-                consume();
-
-            catPrev = cat;
-            a = b;
-        }
-        if (dim)
-            consume();
-    }
-};
-
 } // namespace detail
 
 template <Dimensions D, typename T>
@@ -430,6 +311,7 @@ constexpr auto operator/(L l, Quantity<RD, R> r) noexcept
     return l / r.value;
 }
 
+// Deduction guide for dimensionless quantities
 template <typename T>
 Quantity(T x) -> Quantity<{}, T>;
 
@@ -475,6 +357,129 @@ AliasQuantity(Work, Energy)
 #undef AliasQuantity
 
 } // namespace quantities
+
+namespace detail {
+
+template <unsigned N>
+struct StringLiteral {
+    char s[N]{};
+
+    constexpr StringLiteral(const char(&arr)[N]) noexcept {
+        for (unsigned i = 0; i < N; ++i)
+            s[i] = arr[i];
+    }
+
+    constexpr const char* begin() const noexcept {
+        return s;
+    }
+
+    constexpr const char* end() const noexcept {
+        return s + N;
+    }
+};
+
+struct LiteralParser {
+    Dimensions d { };
+    double factor = 1;
+
+    constexpr LiteralParser(const char* a, const char* const e) {
+        char cat = 0, catPrev = 0;
+        bool div = false;
+        bool minus = false;
+        bool num = false;
+        dim_t* dim = nullptr;
+        int n = 1;
+
+        auto consume = [&] {
+            if (minus && !num)
+                throw "Unexpected minus without number in unit literal";
+            if (div)
+                n = -n;
+            if (minus)
+                n = -n;
+            *dim += n;
+            div = false;
+            minus = false;
+            num = false;
+            dim = nullptr;
+            n = 1;
+        };
+
+        const char* b = a;
+        for (; b < e; ++b) {
+            const char c = *b;
+            if (('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z')) {
+                cat = 'a';
+            } else if ('0' <= c && c <= '9') {
+                cat = '0';
+            } else if (c == ' ' || c == '\t' || c == '\0') {
+                cat = ' ';
+            } else if (c == '-' || c == '/') {
+                if (cat == c)
+                    throw "Unexpected repeated operator in unit literal";
+                cat = c;
+            } else {
+                throw "Unexpected character in unit literal";
+            }
+
+            if (cat == catPrev)
+                continue;
+
+            switch (catPrev) {
+                case 'a': {
+                    const std::string_view token(a, b);
+                    if (token == "kg") {
+                        dim = &d.mass;
+                    } else if (token == "m") {
+                        dim = &d.length;
+                    } else if (token == "s") {
+                        dim = &d.time;
+                    } else {
+                        throw "Unexpected string in unit literal";
+                    }
+                } break;
+                case '0': {
+                    n = 0;
+                    for (; a < b; ++a) {
+                        (n *= 10) += *a - '0';
+                    }
+                    num = true;
+                } break;
+                case '/': {
+                    div = true;
+                } break;
+                default: ;
+            }
+
+            switch (cat) {
+                case '0': {
+                    if (!dim || num)
+                        throw "Unexpected number in unit literal";
+                } break;
+                case '-': {
+                    if (!dim || minus || num)
+                        throw "Unexpected minus in unit literal";
+                    minus = true;
+                } break;
+                case '/': {
+                    if (div || minus)
+                        throw "Unexpected division in unit literal";
+                } break;
+                default: ;
+            }
+
+            if (catPrev && (cat == '/' || (cat == 'a' && !div)))
+                consume();
+
+            catPrev = cat;
+            a = b;
+        }
+        if (dim)
+            consume();
+    }
+};
+
+}
 
 namespace literals {
 
