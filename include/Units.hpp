@@ -16,12 +16,10 @@ struct Dimensions {
     }
 
     constexpr Dimensions operator+(const Dimensions& r) const noexcept {
-        // TODO: check for overflow
         return { mass + r.mass, length + r.length, time + r.time };
     }
 
     constexpr Dimensions& operator+=(const Dimensions& r) noexcept {
-        // TODO: check for overflow
         mass += r.mass;
         length += r.length;
         time += r.time;
@@ -29,7 +27,6 @@ struct Dimensions {
     }
 
     constexpr Dimensions operator-(const Dimensions& r) const noexcept {
-        // TODO: check for underflow
         return { mass - r.mass, length - r.length, time - r.time };
     }
 
@@ -38,7 +35,6 @@ struct Dimensions {
     }
 
     constexpr Dimensions& operator-=(const Dimensions& r) noexcept {
-        // TODO: check for underflow
         mass -= r.mass;
         length -= r.length;
         time -= r.time;
@@ -46,25 +42,27 @@ struct Dimensions {
     }
 
     constexpr Dimensions operator*(dim_t n) const noexcept {
-        // TODO: check for overflow
         return { mass * n, length * n, time * n };
     }
 
     constexpr Dimensions& operator*=(dim_t n) noexcept {
-        // TODO: check for overflow
         mass *= n;
         length *= n;
         time *= n;
         return *this;
     }
 
-    constexpr Dimensions operator/(dim_t n) const noexcept {
-        // TODO: check for remainder == 0
+    constexpr Dimensions operator/(dim_t n) const {
+        if (mass % n || length % n || time % n) {
+            throw "Fractional dimensions are not supported";
+        }
         return { mass / n, length / n, time / n };
     }
 
-    constexpr Dimensions& operator/=(dim_t n) noexcept {
-        // TODO: check for remainder == 0
+    constexpr Dimensions& operator/=(dim_t n) {
+        if (mass % n || length % n || time % n) {
+            throw "Fractional dimensions are not supported";
+        }
         mass /= n;
         length /= n;
         time /= n;
@@ -148,13 +146,6 @@ struct StringLiteral {
         return s + N;
     }
 };
-
-// kg
-// kg2
-// kg-2
-// /kg
-// /kg2
-// /kg-2
 
 struct LiteralParser {
     Dimensions d { };

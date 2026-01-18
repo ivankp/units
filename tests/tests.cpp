@@ -258,4 +258,5 @@ TEST(Literals2) {
     static_assert(std::is_same_v<decltype("m/m3"_u), Quantity<{0,-2,0},double>>);
     static_assert(std::is_same_v<decltype("/s"_u), Frequency<double>>);
     static_assert(std::is_same_v<decltype("/s-1"_u), Time<double>>);
+    static_assert(std::is_same_v<decltype(Root<2>("s2"_u)), Time<double>>);
 }
