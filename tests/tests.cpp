@@ -2,7 +2,6 @@
 
 #include "Units.hpp"
 
-#include <array>
 #include <type_traits>
 
 struct vec2 {
@@ -242,9 +241,11 @@ TEST(Literals2) {
     static_assert(std::is_same_v<decltype("m2"_u), Area<double>>);
     static_assert(std::is_same_v<decltype("m3"_u), Volume<double>>);
     static_assert(std::is_same_v<decltype("m0"_u), Quantity<{0,0,0},double>>);
+
     static_assert("m0"_u == 1.);
     static_assert("kg0"_u == 1.);
     static_assert(""_u == 1.);
+
     static_assert(std::is_same_v<decltype("s-1"_u), Frequency<double>>);
     static_assert(std::is_same_v<decltype("s -1"_u), Frequency<double>>);
     static_assert(std::is_same_v<decltype("s- 1"_u), Frequency<double>>);
@@ -259,4 +260,7 @@ TEST(Literals2) {
     static_assert(std::is_same_v<decltype("/s"_u), Frequency<double>>);
     static_assert(std::is_same_v<decltype("/s-1"_u), Time<double>>);
     static_assert(std::is_same_v<decltype(Root<2>("s2"_u)), Time<double>>);
+
+
+    static_assert(1e3 * "g"_u == "kg"_u);
 }

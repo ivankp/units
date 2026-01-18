@@ -80,6 +80,17 @@ constexpr bool isIdentity = false;
 template <>
 constexpr bool isIdentity<Identity> = true;
 
+constexpr double pow(double base, unsigned n) noexcept {
+    double result = 1;
+    while (n > 0) {
+        if (n & 1)
+            result *= base;
+        base *= base;
+        n >>= 1;
+    }
+    return result;
+}
+
 template <dim_t N, typename T, typename R = Identity>
 constexpr auto Pow(const T& base, const R& result = {})
 noexcept(std::is_arithmetic_v<T>)
@@ -360,6 +371,29 @@ AliasQuantity(Work, Energy)
 
 namespace detail {
 
+struct UnitDef {
+    Dimensions d { };
+    double factor = 1;
+};
+
+#define ALL_UNITS \
+    X(kg, {1, 0, 0}, 1) \
+    X(g, {1, 0, 0}, 1e-3) \
+    X(m, {0, 1, 0}, 1) \
+    X(s, {0, 0, 1}, 1)
+
+#define X(NAME, ...) #NAME,
+constexpr const char* unitsNames[] { ALL_UNITS };
+#undef X
+#define X(NAME, ...) { __VA_ARGS__ },
+constexpr UnitDef unitsDefs[] { ALL_UNITS };
+#undef X
+
+#undef ALL_UNITS
+
+constexpr unsigned numUnits = std::size(unitsDefs);
+static_assert(numUnits != unsigned(-1));
+
 template <unsigned N>
 struct StringLiteral {
     char s[N]{};
@@ -379,29 +413,33 @@ struct StringLiteral {
 };
 
 struct LiteralParser {
-    Dimensions d { };
-    double factor = 1;
+    UnitDef def;
 
     constexpr LiteralParser(const char* a, const char* const e) {
         char cat = 0, catPrev = 0;
         bool div = false;
         bool minus = false;
         bool num = false;
-        dim_t* dim = nullptr;
+        unsigned unit = unsigned(-1);
         int n = 1;
 
         auto consume = [&] {
             if (minus && !num)
                 throw "Unexpected minus without number in unit literal";
+
             if (div)
                 n = -n;
             if (minus)
                 n = -n;
-            *dim += n;
+
+            const auto& u = unitsDefs[unit];
+            def.d += u.d * n;
+            def.factor *= detail::pow(u.factor, n);
+
             div = false;
             minus = false;
             num = false;
-            dim = nullptr;
+            unit = unsigned(-1);
             n = 1;
         };
 
@@ -428,15 +466,14 @@ struct LiteralParser {
             switch (catPrev) {
                 case 'a': {
                     const std::string_view token(a, b);
-                    if (token == "kg") {
-                        dim = &d.mass;
-                    } else if (token == "m") {
-                        dim = &d.length;
-                    } else if (token == "s") {
-                        dim = &d.time;
-                    } else {
-                        throw "Unexpected string in unit literal";
+                    for (unsigned i = 0; i < numUnits; ++i) {
+                        if (token == unitsNames[i]) {
+                            unit = i;
+                            break;
+                        }
                     }
+                    if (unit == unsigned(-1))
+                        throw "Unexpected string in unit literal";
                 } break;
                 case '0': {
                     n = 0;
@@ -453,11 +490,11 @@ struct LiteralParser {
 
             switch (cat) {
                 case '0': {
-                    if (!dim || num)
+                    if (unit == unsigned(-1) || num)
                         throw "Unexpected number in unit literal";
                 } break;
                 case '-': {
-                    if (!dim || minus || num)
+                    if (unit == unsigned(-1) || minus || num)
                         throw "Unexpected minus in unit literal";
                     minus = true;
                 } break;
@@ -474,7 +511,7 @@ struct LiteralParser {
             catPrev = cat;
             a = b;
         }
-        if (dim)
+        if (unit != unsigned(-1))
             consume();
     }
 };
@@ -486,13 +523,13 @@ namespace literals {
 template <detail::StringLiteral s>
 constexpr auto operator ""_u() noexcept {
     constexpr detail::LiteralParser p(s.begin(), s.end());
-    return MakeQuantity<p.d>(p.factor);
+    return MakeQuantity<p.def.d>(p.def.factor);
 }
 
 template <detail::StringLiteral s>
 constexpr auto operator ""_uf() noexcept {
     constexpr detail::LiteralParser p(s.begin(), s.end());
-    return MakeQuantity<p.d>(float(p.factor));
+    return MakeQuantity<p.def.d>(float(p.def.factor));
 }
 
 } // namespace literals
