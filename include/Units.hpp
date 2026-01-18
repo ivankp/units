@@ -149,53 +149,101 @@ struct StringLiteral {
     }
 };
 
+// kg
+// kg2
+// kg-2
+// /kg
+// /kg2
+// /kg-2
+
 struct LiteralParser {
     Dimensions d { };
     double factor = 1;
 
-    enum Category { alph, num, op, none };
-
     constexpr LiteralParser(const char* a, const char* const e) {
-        const char* b = a;
-        // Category cat = none, cat2 = none;
+        char cat = 0, catPrev = 0;
+        bool div = false;
+        bool minus = false;
+        bool num = false;
+        dim_t* dim = nullptr;
+        int n = 1;
 
+        auto set = [&] {
+            if (dim) {
+                *dim += n;
+                div = false;
+                minus = false;
+                num = false;
+                dim = nullptr;
+                n = 1;
+            }
+        };
+
+        const char* b = a;
         for (; b < e; ++b) {
             const char c = *b;
-
-            /*
-            if (c == ' ' || c == '\t') {
-                cat2 = none;
-            } else if (('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z')) {
-                cat2 = alph;
+            if (('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z')) {
+                if (!div && cat != 'a')
+                    set();
+                cat = 'a';
+            } else if ('0' <= c && c <= '9') {
+                if (!dim || num)
+                    throw "Unexpected number in unit literal";
+                cat = '0';
+            } else if (c == ' ' || c == '\t' || c == '\0') {
+                cat = ' ';
+            } else if (c == '-') {
+                if (!dim || minus || num)
+                    throw "Unexpected minus in unit literal";
+                cat = c;
+                minus = true;
+            } else if (c == '/') {
+                if (div || minus)
+                    throw "Unexpected division in unit literal";
+                if (catPrev != 0)
+                    set();
+                cat = c;
+                div = true;
             } else {
-                // TODO: error
+                throw "Unexpected character in unit literal";
             }
 
-            if (cat != cat2) {
-                switch (cat) {
-                    case alph: {
-                    } break;
-                    case num: {
-                    } break;
-                }
-                a = b;
-                cat = cat2;
-            }
-            */
+            if (cat == catPrev)
+                continue;
 
-            if ((c < 'A' || 'Z' < c) && (c < 'a' || 'z' < c)) {
-                // TODO: write a custom comparison function (maybe lambda)
-                const std::string_view v(a, b);
-                if (v == "kg") {
-                    d.mass += 1;
-                } else if (v == "m") {
-                    d.length += 1;
-                } else if (v == "s") {
-                    d.time += 1;
-                }
-                break; // TODO: complete parsing algorithm
+            switch (catPrev) {
+                case 'a': {
+                    const std::string_view token(a, b);
+                    if (token == "kg") {
+                        dim = &d.mass;
+                    } else if (token == "m") {
+                        dim = &d.length;
+                    } else if (token == "s") {
+                        dim = &d.time;
+                    } else {
+                        throw "Unexpected string in unit literal";
+                    }
+                } break;
+                case '0': {
+                    n = 0;
+                    while (a < b) {
+                        const char c = *a;
+                        (n *= 10) += c - '0';
+                    }
+                    if (div)
+                        n = -n;
+                    if (minus)
+                        n = -n;
+                    num = true;
+                } break;
+                default: ;
             }
+
+            catPrev = cat;
+            a = b;
         }
+        set();
+        // TODO: how to determine when a new unit starts?
     }
 };
 
@@ -220,22 +268,6 @@ template <Dimensions D, typename T>
 constexpr Quantity<D, T> MakeQuantity(T value) noexcept {
     return value;
 }
-
-namespace literals {
-
-template <detail::StringLiteral s>
-constexpr auto operator ""_u() noexcept {
-    constexpr detail::LiteralParser p(s.begin(), s.end());
-    return MakeQuantity<p.d>(p.factor);
-}
-
-template <detail::StringLiteral s>
-constexpr auto operator ""_uf() noexcept {
-    constexpr detail::LiteralParser p(s.begin(), s.end());
-    return MakeQuantity<p.d>(float(p.factor));
-}
-
-} // namespace literals
 
 template <Dimensions D, NotAQuantity T>
 class Quantity<D, T> {
@@ -442,5 +474,21 @@ AliasQuantity(Work, Energy)
 #undef AliasQuantity
 
 } // namespace quantities
+
+namespace literals {
+
+template <detail::StringLiteral s>
+constexpr auto operator ""_u() noexcept {
+    constexpr detail::LiteralParser p(s.begin(), s.end());
+    return MakeQuantity<p.d>(p.factor);
+}
+
+template <detail::StringLiteral s>
+constexpr auto operator ""_uf() noexcept {
+    constexpr detail::LiteralParser p(s.begin(), s.end());
+    return MakeQuantity<p.d>(float(p.factor));
+}
+
+} // namespace literals
 
 } // namespace units

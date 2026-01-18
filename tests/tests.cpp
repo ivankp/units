@@ -232,3 +232,10 @@ TEST(LiteralFloat) {
     static_assert(std::is_same_v<decltype(1 * "m"_uf), Length<float>>);
     static_assert(std::is_same_v<decltype(1 * "s"_uf), Time<float>>);
 }
+
+void type(auto);
+
+TEST(Literals2) {
+    type("m/s"_u);
+    // static_assert(std::is_same_v<decltype("m/s"_u), Speed<double>>);
+}
