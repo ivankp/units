@@ -254,13 +254,15 @@ TEST(Literals2) {
     static_assert(std::is_same_v<decltype("s-1 m"_u), Speed<double>>);
     static_assert(std::is_same_v<decltype("s-1m"_u), Speed<double>>);
     static_assert(std::is_same_v<decltype("s- 1m"_u), Speed<double>>);
+
     static_assert(std::is_same_v<decltype("m/s"_u), Speed<double>>);
     static_assert("m/m"_u == 1);
     static_assert(std::is_same_v<decltype("m/m3"_u), Quantity<{0,-2,0},double>>);
     static_assert(std::is_same_v<decltype("/s"_u), Frequency<double>>);
     static_assert(std::is_same_v<decltype("/s-1"_u), Time<double>>);
-    static_assert(std::is_same_v<decltype(Root<2>("s2"_u)), Time<double>>);
+    static_assert(std::is_same_v<decltype(Root<2>("m2"_u)), Length<double>>);
 
 
     static_assert(1e3 * "g"_u == "kg"_u);
+    static_assert("psi / Pa"_u == 6895);
 }

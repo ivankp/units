@@ -380,7 +380,9 @@ struct UnitDef {
     X(kg, {1, 0, 0}, 1) \
     X(g, {1, 0, 0}, 1e-3) \
     X(m, {0, 1, 0}, 1) \
-    X(s, {0, 0, 1}, 1)
+    X(s, {0, 0, 1}, 1) \
+    X(Pa, {1, -1, -2}, 1) \
+    X(psi, {1, -1, -2}, 6895)
 
 #define X(NAME, ...) #NAME,
 constexpr const char* unitsNames[] { ALL_UNITS };
