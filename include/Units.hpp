@@ -392,6 +392,7 @@ struct UnitDef {
     X(J  , { 1,  2, -2}, 1) \
     X(W  , { 1,  2, -3}, 1) \
     X(ha , { 0,  2,  0}, 1e4L) \
+    X(t  , { 1,  0,  0}, 1e3L) \
     /* Imperial units */ \
     X(in , { 0,  1,  0}, 0.0254L) /* exact */ \
     X(ft , { 0,  1,  0}, 0.3048L) /* exact */ \
@@ -401,6 +402,8 @@ struct UnitDef {
     X(lbm, { 1,  0,  0}, 0.45359237L) /* exact */ \
     X(lbf, { 1,  1, -2}, 4.4482216152605L) /* exact */ \
     X(psi, { 1, -1, -2}, 6894.75729316836133672267L) \
+    /* Other units */ \
+    X(eV , { 1,  2, -2}, 1.602176634e-19) \
 
 #define X(NAME, ...) #NAME,
 constexpr const char* unitsNames[] { ALL_UNITS };

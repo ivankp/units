@@ -318,4 +318,9 @@ TEST(Literals3) {
     static_assert("ha"_u == "hm2"_u);
     static_assert("ha"_u / "yd2"_u / 11'960 > 1 - 1e-5);
     static_assert("ha"_u / "yd2"_u / 11'960 < 1 + 1e-5);
+
+    static_assert("t"_u == 1e3 * "kg"_u);
+
+    static_assert("EeV"_u / "J"_u / 0.1602 > 1);
+    static_assert("EeV"_u / "J"_u / 0.1602 < 1 + 1e-3);
 }
