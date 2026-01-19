@@ -262,8 +262,38 @@ TEST(Literals2) {
     static_assert(std::is_same_v<decltype("/s-1"_u), Time<double>>);
     static_assert(std::is_same_v<decltype(Root<2>("m2"_u)), Length<double>>);
 
-    static_assert(1e3 * "g"_u == "kg"_u);
     static_assert(int("psi / Pa"_u + 0.5) == 6895);
 
     static_assert("lbf/in2"_u == "psi"_u);
+}
+
+TEST(LiteralsPrefixes) {
+    static_assert("Qs"_u  == 1e30  * "s"_u);
+    static_assert("Rs"_u  == 1e27  * "s"_u);
+    static_assert("Ys"_u  == 1e24  * "s"_u);
+    static_assert("Zs"_u  == 1e21  * "s"_u);
+    static_assert("Es"_u  == 1e18  * "s"_u);
+    static_assert("Ps"_u  == 1e15  * "s"_u);
+    static_assert("Ts"_u  == 1e12  * "s"_u);
+    static_assert("Gs"_u  == 1e9   * "s"_u);
+    static_assert("Ms"_u  == 1e6   * "s"_u);
+    static_assert("ks"_u  == 1e3   * "s"_u);
+    static_assert("hs"_u  == 1e2   * "s"_u);
+    static_assert("das"_u == 1e1   * "s"_u);
+    static_assert("ds"_u  == 1e-1  * "s"_u);
+    static_assert("cs"_u  == 1e-2  * "s"_u);
+    static_assert("ms"_u  == 1e-3  * "s"_u);
+    static_assert("us"_u  == 1e-6  * "s"_u);
+    static_assert("ns"_u  == 1e-9  * "s"_u);
+    static_assert("ps"_u  == 1e-12 * "s"_u);
+    static_assert("fs"_u  == 1e-15 * "s"_u);
+    static_assert("as"_u  == 1e-18 * "s"_u);
+    static_assert("zs"_u  == 1e-21 * "s"_u);
+    static_assert("ys"_u  == 1e-24 * "s"_u);
+    static_assert("rs"_u  == 1e-27 * "s"_u);
+    static_assert("qs"_u  == 1e-30 * "s"_u);
+
+    static_assert(1e3 * "g"_u == "kg"_u);
+    static_assert(1e6 * "mm"_u == "km"_u);
+    static_assert(1e6 * "Pa"_u == "MPa"_u);
 }

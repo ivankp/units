@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstddef>
 #include <cmath>
 #include <string_view>
 #include <type_traits>
@@ -382,20 +381,19 @@ struct UnitDef {
 };
 
 #define ALL_UNITS \
-    X(kg , { 1,  0,  0}, 1) \
-    X(g  , { 1,  0,  0}, 1e-3) \
+    X(g  , { 1,  0,  0}, 1e-3L) \
     X(m  , { 0,  1,  0}, 1) \
     X(s  , { 0,  0,  1}, 1) \
     X(N  , { 1,  1, -2}, 1) \
     X(Pa , { 1, -1, -2}, 1) \
-    X(in , { 0,  1,  0}, 0.0254) /* exact */ \
-    X(ft , { 0,  1,  0}, 0.3048) /* exact */ \
-    X(yd , { 0,  1,  0}, 0.9144) /* exact */ \
-    X(mi , { 0,  1,  0}, 1609.344) /* exact */ \
-    X(lb , { 1,  0,  0}, 0.45359237) /* exact */ \
-    X(lbm, { 1,  0,  0}, 0.45359237) /* exact */ \
-    X(lbf, { 1,  1, -2}, 4.4482216152605) /* exact */ \
-    X(psi, { 1, -1, -2}, 6894.75729316836133672267) \
+    X(in , { 0,  1,  0}, 0.0254L) /* exact */ \
+    X(ft , { 0,  1,  0}, 0.3048L) /* exact */ \
+    X(yd , { 0,  1,  0}, 0.9144L) /* exact */ \
+    X(mi , { 0,  1,  0}, 1609.344L) /* exact */ \
+    X(lb , { 1,  0,  0}, 0.45359237L) /* exact */ \
+    X(lbm, { 1,  0,  0}, 0.45359237L) /* exact */ \
+    X(lbf, { 1,  1, -2}, 4.4482216152605L) /* exact */ \
+    X(psi, { 1, -1, -2}, 6894.75729316836133672267L) \
 
 #define X(NAME, ...) #NAME,
 constexpr const char* unitsNames[] { ALL_UNITS };
@@ -403,10 +401,26 @@ constexpr const char* unitsNames[] { ALL_UNITS };
 #define X(NAME, ...) { __VA_ARGS__ },
 constexpr UnitDef unitsDefs[] { ALL_UNITS };
 #undef X
-
 #undef ALL_UNITS
 
-constexpr std::size_t numUnits = std::size(unitsDefs);
+constexpr unsigned numUnits = std::size(unitsDefs);
+
+constexpr unsigned FindUnit(const char* a, const char* b) noexcept {
+    const std::string_view token(a, b);
+    unsigned i = 0;
+    for (; i < numUnits; ++i) {
+        if (token == unitsNames[i])
+            break;
+    }
+    return i;
+};
+
+constexpr char prefixes[] = "EGMPQRTYZacdfhkmnpqruyz";
+constexpr long double prefixPowers[] {
+    1e18L, 1e9L, 1e6L, 1e15L, 1e30L, 1e27L, 1e12L, 1e24L, 1e21L, 1e-18L, 1e-2L,
+    1e-1L, 1e-15L, 1e2L, 1e3L, 1e-3L, 1e-9L, 1e-12L, 1e-30L, 1e-27L, 1e-6L,
+    1e-24L, 1e-21L
+};
 
 template <unsigned N>
 struct StringLiteral {
@@ -434,7 +448,8 @@ struct LiteralParser {
         bool div = false;
         bool minus = false;
         bool num = false;
-        std::size_t unit = numUnits;
+        long double prefix = 1;
+        unsigned unit = numUnits;
         int n = 1;
 
         auto consume = [&] {
@@ -448,11 +463,12 @@ struct LiteralParser {
 
             const auto& u = unitsDefs[unit];
             def.d += u.d * n;
-            def.factor *= detail::pow(u.factor, n);
+            def.factor *= detail::pow(u.factor * prefix, n);
 
             div = false;
             minus = false;
             num = false;
+            prefix = 1;
             unit = numUnits;
             n = 1;
         };
@@ -479,13 +495,25 @@ struct LiteralParser {
 
             switch (catPrev) {
                 case 'a': {
-                    const std::string_view token(a, b);
-                    for (unit = 0; unit < numUnits; ++unit) {
-                        if (token == unitsNames[unit])
-                            break;
+                    unit = FindUnit(a, b);
+                    if (unit == numUnits && (b-a) > 1) {
+                        // const unsigned i = prefixes.find(*a);
+                        const char c = *a;
+                        for (unsigned i = 0; i < sizeof(prefixes) - 1; ++i) {
+                            if (prefixes[i] == c) {
+                                unit = FindUnit(a + 1, b);
+                                prefix = prefixPowers[i];
+                                break;
+                            }
+                        }
                     }
-                    if (unit == numUnits)
+                    if (unit == numUnits && (b-a) > 2 && a[0]=='d' && a[1]=='a') {
+                        unit = FindUnit(a + 2, b);
+                        prefix = 1e1L;
+                    }
+                    if (unit == numUnits) {
                         throw "Unexpected string in unit literal";
+                    }
                 } break;
                 case '0': {
                     n = 0;
