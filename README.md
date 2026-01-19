@@ -60,7 +60,7 @@ Alternatively, terser literals are available for some units.
 ```c++
 using namespace units::simple_literals;
 
-double mass_kg = 15._kg;
+auto mass = 15._kg;
 ```
 
 # Documentation
