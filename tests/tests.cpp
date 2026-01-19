@@ -324,3 +324,9 @@ TEST(Literals3) {
     static_assert("EeV"_u / "J"_u / 0.1602 > 1);
     static_assert("EeV"_u / "J"_u / 0.1602 < 1 + 1e-3);
 }
+
+TEST(LiteralsTime) {
+    static_assert("min"_u == 60 * "s"_u);
+    static_assert("h"_u == 60 * "min"_u);
+    static_assert("d"_u == 24 * "h"_u);
+}
