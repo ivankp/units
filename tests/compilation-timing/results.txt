@@ -1,0 +1,5 @@
+Without visit   : 0.043150 ± 0.001701
+With    visit   : 0.155905 ± 0.001222
+Difference      : 0.112755 ± 0.002094
+Include iostream: 0.241655 ± 0.001664
+Difference      : 0.198505 ± 0.002379
