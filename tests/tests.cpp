@@ -389,3 +389,21 @@ TEST(Literals3) {
     static_assert("kW h"_u == 3.6 * "MJ"_u);
     static_assert("Wh"_u == "W h"_u);
 }
+
+TEST(LiteralsSpaces) {
+    static_assert("s"_u == "s "_u);
+    static_assert("s"_u == " s"_u);
+    static_assert("s"_u == " s "_u);
+
+    static_assert("s-1"_u == "s -1"_u);
+    static_assert("s-1"_u == "s- 1"_u);
+    static_assert("s-1"_u == "s - 1"_u);
+    static_assert("s-1"_u == "/s"_u);
+    static_assert("s-1"_u == "/ s"_u);
+
+    static_assert("s"_u == "/s-1"_u);
+    static_assert("s"_u == "/ s-1"_u);
+    static_assert("s"_u == "/ s -1"_u);
+    static_assert("s"_u == "/ s- 1"_u);
+    static_assert("s"_u == "/ s - 1"_u);
+}

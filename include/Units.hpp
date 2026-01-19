@@ -507,7 +507,8 @@ struct LiteralParser {
             } else if ('0' <= c && c <= '9') {
                 cat = '0';
             } else if (c == ' ' || c == '\t' || c == '\0') {
-                cat = ' ';
+                if (cat) // ignore leading spaces
+                    cat = ' ';
             } else if (c == '-' || c == '/') {
                 if (cat == c)
                     throw "Unexpected repeated operator in unit literal";
