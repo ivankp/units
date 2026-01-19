@@ -407,3 +407,28 @@ TEST(LiteralsSpaces) {
     static_assert("s"_u == "/ s- 1"_u);
     static_assert("s"_u == "/ s - 1"_u);
 }
+
+TEST(SimpleLiterals) {
+    using namespace units::simple_literals;
+
+    static_assert(1._ft == "ft"_u);
+    static_assert(1._g == "g"_u);
+    static_assert(1._h == "h"_u);
+    static_assert(1._in == "in"_u);
+    static_assert(1._J == "J"_u);
+    static_assert(1._kg == "kg"_u);
+    static_assert(1._L == "L"_u);
+    static_assert(1._lb == "lb"_u);
+    static_assert(1._lbf == "lbf"_u);
+    static_assert(1._lbm == "lbm"_u);
+    static_assert(1._m == "m"_u);
+    static_assert(1._mi == "mi"_u);
+    static_assert(1._min == "min"_u);
+    static_assert(1._MPa == "MPa"_u);
+    static_assert(1._mph == "mph"_u);
+    static_assert(1._N == "N"_u);
+    static_assert(1._Pa == "Pa"_u);
+    static_assert(1._psi == "psi"_u);
+    static_assert(1._s == "s"_u);
+    static_assert(1._W == "W"_u);
+}

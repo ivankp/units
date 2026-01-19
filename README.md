@@ -55,6 +55,14 @@ constexpr double MPa_to_Pa = "MPa / Pa"_u; // same as 1e6
 These literals can be used directly in place of constant conversion factors that are not type safe
 with respect to units.
 
+## Simple literals
+Alternatively, terser literals are available for some units.
+```c++
+using namespace units::simple_literals;
+
+double mass_kg = 15._kg;
+```
+
 # Documentation
 **Coming soon**
 
