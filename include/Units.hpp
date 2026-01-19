@@ -428,11 +428,11 @@ constexpr unsigned FindUnit(const char* a, const char* b) noexcept {
     return i;
 };
 
-constexpr char prefixes[] = "EGMPQRTYZacdfhkmnpqruyz";
+constexpr char prefixes[] = "kmMuGnTphdcPfEaZzYyRrQq";
 constexpr long double prefixPowers[] {
-    1e18L, 1e9L, 1e6L, 1e15L, 1e30L, 1e27L, 1e12L, 1e24L, 1e21L, 1e-18L, 1e-2L,
-    1e-1L, 1e-15L, 1e2L, 1e3L, 1e-3L, 1e-9L, 1e-12L, 1e-30L, 1e-27L, 1e-6L,
-    1e-24L, 1e-21L
+    1e3L, 1e-3L, 1e6L, 1e-6L, 1e9L, 1e-9L, 1e12L, 1e-12L, 1e2L, 1e-1L, 1e-2L,
+    1e15L, 1e-15L, 1e18L, 1e-18L, 1e21L, 1e-21L, 1e24L, 1e-24L, 1e27L, 1e-27L,
+    1e30L, 1e-30L
 };
 
 template <unsigned N>
