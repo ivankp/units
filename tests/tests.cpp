@@ -1,8 +1,8 @@
-#include "test.hpp"
-
 #include "Units.hpp"
 
 #include <type_traits>
+
+#include "test.hpp"
 
 struct vec2 {
     double x, y;

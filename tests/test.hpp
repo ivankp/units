@@ -30,9 +30,9 @@ int main() {
 #define STR1(X) #X
 
 #define TEST(NAME) \
-    void NAME(); \
-    RegisterTest RegisterTest_##NAME(&NAME, #NAME); \
-    void NAME()
+    extern "C" void TEST_##NAME(); \
+    RegisterTest RegisterTest_##NAME(&TEST_##NAME, STR(TEST_##NAME)); \
+    void TEST_##NAME()
 
 #define TEST_EQ(LHS, RHS) \
     if (!( (LHS) == (RHS) )) { \
