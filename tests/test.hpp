@@ -30,7 +30,7 @@ int main() {
 #define STR1(X) #X
 
 #define TEST(NAME) \
-    extern "C" void TEST_##NAME(); \
+    void TEST_##NAME(); \
     RegisterTest RegisterTest_##NAME(&TEST_##NAME, STR(TEST_##NAME)); \
     void TEST_##NAME()
 

@@ -79,8 +79,9 @@ constexpr bool isIdentity = false;
 template <>
 constexpr bool isIdentity<Identity> = true;
 
-constexpr double pow(double base, int n) noexcept {
-    double result = 1;
+template <typename T>
+constexpr T pow(T base, int n) noexcept {
+    T result = 1;
     if (n < 0) {
         return 1. / pow(base, -n);
     } else {
@@ -521,10 +522,9 @@ struct LiteralParser {
                 case 'a': {
                     unit = FindUnit(a, b);
                     if (unit == numUnits && (b-a) > 1) {
-                        // const unsigned i = prefixes.find(*a);
-                        const char c = *a;
+                        const char p = *a;
                         for (unsigned i = 0; i < sizeof(prefixes) - 1; ++i) {
-                            if (prefixes[i] == c) {
+                            if (prefixes[i] == p) {
                                 unit = FindUnit(a + 1, b);
                                 prefix = prefixPowers[i];
                                 break;
