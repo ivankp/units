@@ -378,7 +378,7 @@ namespace detail {
 
 struct UnitDef {
     Dimensions d { };
-    double factor = 1;
+    long double factor = 1;
 };
 
 #define ALL_UNITS \
@@ -535,7 +535,7 @@ namespace literals {
 template <detail::StringLiteral s>
 constexpr auto operator ""_u() noexcept {
     constexpr detail::LiteralParser p(s.begin(), s.end());
-    return MakeQuantity<p.def.d>(p.def.factor);
+    return MakeQuantity<p.def.d>(double(p.def.factor));
 }
 
 template <detail::StringLiteral s>
