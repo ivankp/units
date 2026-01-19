@@ -292,8 +292,30 @@ TEST(LiteralsPrefixes) {
     static_assert("ys"_u  == 1e-24 * "s"_u);
     static_assert("rs"_u  == 1e-27 * "s"_u);
     static_assert("qs"_u  == 1e-30 * "s"_u);
+}
 
+TEST(Literals3) {
     static_assert(1e3 * "g"_u == "kg"_u);
     static_assert(1e6 * "mm"_u == "km"_u);
     static_assert(1e6 * "Pa"_u == "MPa"_u);
+
+    static_assert("mL"_u / "cm3"_u > 1 - 1e-12);
+    static_assert("mL"_u / "cm3"_u < 1 + 1e-12);
+    static_assert("L"_u / "dm3"_u > 1 - 1e-12);
+    static_assert("L"_u / "dm3"_u < 1 + 1e-12);
+
+    static_assert("Pa"_u == "N/m2"_u);
+
+    static_assert("J"_u == "kg m2/s2"_u);
+    static_assert("J"_u == "N m"_u);
+
+    static_assert("W"_u == "kg m2 s-3"_u);
+    static_assert("W"_u == "J/s"_u);
+
+    static_assert("Hz"_u == "s-1"_u);
+
+    static_assert("ha"_u == 1e4 * "m2"_u);
+    static_assert("ha"_u == "hm2"_u);
+    static_assert("ha"_u / "yd2"_u / 11'960 > 1 - 1e-5);
+    static_assert("ha"_u / "yd2"_u / 11'960 < 1 + 1e-5);
 }

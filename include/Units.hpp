@@ -381,11 +381,18 @@ struct UnitDef {
 };
 
 #define ALL_UNITS \
+    /* Metric units */ \
     X(g  , { 1,  0,  0}, 1e-3L) \
     X(m  , { 0,  1,  0}, 1) \
     X(s  , { 0,  0,  1}, 1) \
+    X(L  , { 0,  3,  0}, 1e-3L) \
+    X(Hz , { 0,  0, -1}, 1) \
     X(N  , { 1,  1, -2}, 1) \
     X(Pa , { 1, -1, -2}, 1) \
+    X(J  , { 1,  2, -2}, 1) \
+    X(W  , { 1,  2, -3}, 1) \
+    X(ha , { 0,  2,  0}, 1e4L) \
+    /* Imperial units */ \
     X(in , { 0,  1,  0}, 0.0254L) /* exact */ \
     X(ft , { 0,  1,  0}, 0.3048L) /* exact */ \
     X(yd , { 0,  1,  0}, 0.9144L) /* exact */ \
