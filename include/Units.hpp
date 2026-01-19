@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cmath>
-#include <string_view>
 #include <type_traits>
 
 namespace units {
@@ -421,13 +420,20 @@ constexpr UnitDef unitsDefs[] { ALL_UNITS };
 #undef X
 #undef ALL_UNITS
 
-constexpr unsigned numUnits = std::size(unitsDefs);
+constexpr unsigned numUnits = sizeof(unitsDefs) / sizeof(*unitsDefs);
 
 constexpr unsigned FindUnit(const char* a, const char* b) noexcept {
-    const std::string_view token(a, b);
     unsigned i = 0;
     for (; i < numUnits; ++i) {
-        if (token == unitsNames[i])
+        const char* s1 = a;
+        const char* s2 = unitsNames[i];
+        char c2 = *s2;
+        for (; s1 < b; ++s1) {
+            if (!c2 || *s1 != c2)
+                break;
+            c2 = *++s2;
+        }
+        if (!c2 && s1 == b)
             break;
     }
     return i;
