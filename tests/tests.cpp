@@ -294,6 +294,12 @@ TEST(LiteralsPrefixes) {
     static_assert("qs"_u  == 1e-30 * "s"_u);
 }
 
+TEST(LiteralsTime) {
+    static_assert("min"_u == 60 * "s"_u);
+    static_assert("h"_u == 60 * "min"_u);
+    static_assert("d"_u == 24 * "h"_u);
+}
+
 TEST(Literals3) {
     static_assert(1e3 * "g"_u == "kg"_u);
     static_assert(1e6 * "mm"_u == "km"_u);
@@ -316,17 +322,23 @@ TEST(Literals3) {
 
     static_assert("ha"_u == 1e4 * "m2"_u);
     static_assert("ha"_u == "hm2"_u);
-    static_assert("ha"_u / "yd2"_u / 11'960 > 1 - 1e-5);
-    static_assert("ha"_u / "yd2"_u / 11'960 < 1 + 1e-5);
+    static_assert("ha"_u / "yd2"_u > 11'960 * (1 - 1e-5));
+    static_assert("ha"_u / "yd2"_u < 11'960 * (1 + 1e-5));
 
     static_assert("t"_u == 1e3 * "kg"_u);
 
     static_assert("EeV"_u / "J"_u / 0.1602 > 1);
     static_assert("EeV"_u / "J"_u / 0.1602 < 1 + 1e-3);
-}
 
-TEST(LiteralsTime) {
-    static_assert("min"_u == 60 * "s"_u);
-    static_assert("h"_u == 60 * "min"_u);
-    static_assert("d"_u == 24 * "h"_u);
+    static_assert(1e7 * "erg"_u == "J"_u);
+    static_assert(1e-2 * "erg"_u == "nJ"_u);
+    static_assert(10 * "erg"_u == "uJ"_u);
+
+    static_assert("gTNT"_u == 1e3 * "cal"_u);
+    static_assert("kgTNT"_u == "Mcal"_u);
+
+    static_assert("BTU"_u == 1.0551 * "kJ"_u);
+
+    static_assert("kW h"_u == 3.6 * "MJ"_u);
+    static_assert("Wh"_u == "W h"_u);
 }
