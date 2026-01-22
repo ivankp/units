@@ -342,6 +342,19 @@ TEST(LiteralsPrefixes) {
     static_assert("m / ym"_u  == double(1 / 1e-24L));
     static_assert("m / rm"_u  == double(1 / 1e-27L));
     static_assert("m / qm"_u  == double(1 / 1e-30L));
+
+    static_assert("dam dm"_u == "m2"_u);
+    static_assert("hm cm"_u == "m2"_u);
+    static_assert("km mm"_u == "m2"_u);
+    static_assert("Mm um"_u == "m2"_u);
+    static_assert("Gm nm"_u == "m2"_u);
+    static_assert("Tm pm"_u == "m2"_u);
+    static_assert("Pm fm"_u == "m2"_u);
+    static_assert("Em am"_u == "m2"_u);
+    static_assert("Zm zm"_u == "m2"_u);
+    static_assert("Ym ym"_u == "m2"_u);
+    static_assert("Rm rm"_u == "m2"_u);
+    static_assert("Qm qm"_u == "m2"_u);
 }
 
 TEST(LiteralsTime) {
@@ -355,8 +368,8 @@ TEST(Literals3) {
     static_assert(1e6 * "mm"_u == "km"_u);
     static_assert(1e6 * "Pa"_u == "MPa"_u);
 
-    static_assert("mL"_u / "cm3"_u == (double(1e-3L * 1e-3L) / double(1e-2L * 1e-2L * 1e-2L)));
-    static_assert("L"_u / "dm3"_u == (double(1e-3L) / double(0.1L * 0.1L * 0.1L)));
+    static_assert("mL"_u == "cm3"_u);
+    static_assert("L"_u == "dm3"_u);
 
     static_assert("Pa"_u == "N/m2"_u);
 
@@ -373,6 +386,7 @@ TEST(Literals3) {
     static_assert("ha"_u / "yd2"_u == (1e4 / double(0.9144L * 0.9144L)));
 
     static_assert("t"_u == 1e3 * "kg"_u);
+    static_assert("kt"_u == 1e12 * "mg"_u);
 
     static_assert("EeV"_u / "J"_u / 0.1602 > 1);
     static_assert("EeV"_u / "J"_u / 0.1602 < 1 + 1e-3);
@@ -388,6 +402,10 @@ TEST(Literals3) {
 
     static_assert("kW h"_u == 3.6 * "MJ"_u);
     static_assert("Wh"_u == "W h"_u);
+
+    static_assert("in"_u ==  25.4 * "mm"_u);
+    static_assert("ft"_u == 304.8 * "mm"_u);
+    static_assert("yd"_u == 914.4 * "mm"_u);
 }
 
 TEST(LiteralsSpaces) {

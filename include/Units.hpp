@@ -377,42 +377,47 @@ namespace detail {
 
 struct UnitDef {
     Dimensions d { };
+    int pow10 = 0;
     long double factor = 1;
+
+    constexpr long double operator*() const noexcept {
+        return factor * detail::pow<long double>(10, pow10);
+    }
 };
 
 #define ALL_UNITS \
     /* Metric units */ \
-    X(g  , { 1,  0,  0}, 1e-3L) \
-    X(m  , { 0,  1,  0}, 1) \
-    X(s  , { 0,  0,  1}, 1) \
-    X(min, { 0,  0,  1}, 60) \
-    X(h  , { 0,  0,  1}, 3'600) \
-    X(d  , { 0,  0,  1}, 86'400) \
-    X(L  , { 0,  3,  0}, 1e-3L) \
-    X(N  , { 1,  1, -2}, 1) \
-    X(Pa , { 1, -1, -2}, 1) \
-    X(J  , { 1,  2, -2}, 1) \
-    X(W  , { 1,  2, -3}, 1) \
-    X(Hz , { 0,  0, -1}, 1) \
-    X(ha , { 0,  2,  0}, 1e4L) \
-    X(t  , { 1,  0,  0}, 1e3L) \
+    X(g  , { 1,  0,  0}, -3, 1) \
+    X(m  , { 0,  1,  0},  0, 1) \
+    X(s  , { 0,  0,  1},  0, 1) \
+    X(min, { 0,  0,  1},  0, 60) \
+    X(h  , { 0,  0,  1},  0, 3600) \
+    X(d  , { 0,  0,  1},  0, 86400) \
+    X(L  , { 0,  3,  0}, -3, 1) \
+    X(N  , { 1,  1, -2},  0, 1) \
+    X(Pa , { 1, -1, -2},  0, 1) \
+    X(J  , { 1,  2, -2},  0, 1) \
+    X(W  , { 1,  2, -3},  0, 1) \
+    X(Hz , { 0,  0, -1},  0, 1) \
+    X(ha , { 0,  2,  0},  4, 1) \
+    X(t  , { 1,  0,  0},  3, 1) \
     /* Imperial units */ \
-    X(in , { 0,  1,  0}, 0.0254L) /* exact */ \
-    X(ft , { 0,  1,  0}, 0.3048L) /* exact */ \
-    X(yd , { 0,  1,  0}, 0.9144L) /* exact */ \
-    X(mi , { 0,  1,  0}, 1'609.344L) /* exact */ \
-    X(lb , { 1,  0,  0}, 0.45359237L) /* exact */ \
-    X(lbm, { 1,  0,  0}, 0.45359237L) /* exact */ \
-    X(lbf, { 1,  1, -2}, 4.4482216152605L) /* exact */ \
-    X(psi, { 1, -1, -2}, 6'894.75729316836133672267L) \
-    X(mph, { 0,  1, -1}, 0.44704L) /* exact */ \
+    X(in , { 0,  1,  0}, -4, 254) /* exact */ \
+    X(ft , { 0,  1,  0}, -4, 3048) /* exact */ \
+    X(yd , { 0,  1,  0}, -4, 9144) /* exact */ \
+    X(mi , { 0,  1,  0}, -3, 1609344) /* exact */ \
+    X(lb , { 1,  0,  0},  0, 0.45359237L) /* exact */ \
+    X(lbm, { 1,  0,  0},  0, 0.45359237L) /* exact */ \
+    X(lbf, { 1,  1, -2},  0, 4.4482216152605L) /* exact */ \
+    X(psi, { 1, -1, -2},  0, 6894.75729316836133672267L) \
+    X(mph, { 0,  1, -1}, -5, 44704) /* exact */ \
     /* Other units */ \
-    X(Wh , { 1,  2, -2}, 3'600) \
-    X(erg, { 1,  2, -2}, 1e-7L) \
-    X(cal, { 1,  2, -2}, 4.184L) \
-    X(BTU, { 1,  2, -2}, 1'055.1L) \
-    X(gTNT,{ 1,  2, -2}, 4'184) \
-    X(eV , { 1,  2, -2}, 1.602176634e-19) \
+    X(Wh , { 1,  2, -2},  0, 3600) \
+    X(erg, { 1,  2, -2}, -7, 1) \
+    X(cal, { 1,  2, -2}, -3, 4184) \
+    X(BTU, { 1,  2, -2},  0, 1055.1L) \
+    X(gTNT,{ 1,  2, -2},  0, 4184) \
+    X(eV , { 1,  2, -2},-19, 1.602176634L) \
 
 #define X(NAME, ...) #NAME,
 constexpr const char* unitsNames[] { ALL_UNITS };
@@ -441,11 +446,30 @@ constexpr unsigned FindUnit(const char* a, const char* b) noexcept {
     return i;
 };
 
-constexpr char prefixes[] = "kmMuGnTphdcPfEaZzYyRrQq";
-constexpr long double prefixPowers[] {
-    1e3L, 1e-3L, 1e6L, 1e-6L, 1e9L, 1e-9L, 1e12L, 1e-12L, 1e2L, 1e-1L, 1e-2L,
-    1e15L, 1e-15L, 1e18L, 1e-18L, 1e21L, 1e-21L, 1e24L, 1e-24L, 1e27L, 1e-27L,
-    1e30L, 1e-30L
+constexpr char prefixes[][2] {
+    { 'k',   3 },
+    { 'm',  -3 },
+    { 'M',   6 },
+    { 'u',  -6 },
+    { 'G',   9 },
+    { 'n',  -9 },
+    { 'T',  12 },
+    { 'p', -12 },
+    { 'h',   2 },
+    { 'd',  -1 },
+    { 'c',  -2 },
+    { 'P',  15 },
+    { 'f', -15 },
+    { 'E',  18 },
+    { 'a', -18 },
+    { 'Z',  21 },
+    { 'z', -21 },
+    { 'Y',  24 },
+    { 'y', -24 },
+    { 'R',  27 },
+    { 'r', -27 },
+    { 'Q',  30 },
+    { 'q', -30 }
 };
 
 template <unsigned N>
@@ -474,7 +498,7 @@ struct LiteralParser {
         bool div = false;
         bool minus = false;
         bool num = false;
-        long double prefix = 1;
+        char prefix = 0;
         unsigned unit = numUnits;
         int n = 1;
 
@@ -489,12 +513,13 @@ struct LiteralParser {
 
             const auto& u = unitsDefs[unit];
             def.d += u.d * n;
-            def.factor *= detail::pow(u.factor * prefix, n);
+            def.pow10 += (u.pow10 + prefix) * n;
+            def.factor *= detail::pow(u.factor, n);
 
             div = false;
             minus = false;
             num = false;
-            prefix = 1;
+            prefix = 0;
             unit = numUnits;
             n = 1;
         };
@@ -524,18 +549,18 @@ struct LiteralParser {
                 case 'a': {
                     unit = FindUnit(a, b);
                     if (unit == numUnits && (b-a) > 1) {
-                        const char p = *a;
-                        for (unsigned i = 0; i < sizeof(prefixes) - 1; ++i) {
-                            if (prefixes[i] == p) {
+                        const char c0 = *a;
+                        for (const auto& [ p, power ] : prefixes) {
+                            if (c0 == p) {
                                 unit = FindUnit(a + 1, b);
-                                prefix = prefixPowers[i];
+                                prefix = power;
                                 break;
                             }
                         }
                     }
                     if (unit == numUnits && (b-a) > 2 && a[0]=='d' && a[1]=='a') {
                         unit = FindUnit(a + 2, b);
-                        prefix = 1e1L;
+                        prefix = 1;
                     }
                     if (unit == numUnits) {
                         throw "Unexpected string in unit literal";
@@ -589,13 +614,13 @@ namespace literals {
 template <detail::StringLiteral s>
 constexpr auto operator ""_u() noexcept {
     constexpr detail::LiteralParser p(s.begin(), s.end());
-    return MakeQuantity<p.def.d>(double(p.def.factor));
+    return MakeQuantity<p.def.d>(double(*p.def));
 }
 
 template <detail::StringLiteral s>
 constexpr auto operator ""_uf() noexcept {
     constexpr detail::LiteralParser p(s.begin(), s.end());
-    return MakeQuantity<p.def.d>(float(p.def.factor));
+    return MakeQuantity<p.def.d>(float(*p.def));
 }
 
 } // namespace literals
