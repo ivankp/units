@@ -446,30 +446,30 @@ constexpr unsigned FindUnit(const char* a, const char* b) noexcept {
     return i;
 };
 
-constexpr char prefixes[][2] {
-    { 'k',   3 },
-    { 'm',  -3 },
-    { 'M',   6 },
-    { 'u',  -6 },
-    { 'G',   9 },
-    { 'n',  -9 },
-    { 'T',  12 },
-    { 'p', -12 },
-    { 'h',   2 },
-    { 'd',  -1 },
-    { 'c',  -2 },
-    { 'P',  15 },
-    { 'f', -15 },
-    { 'E',  18 },
-    { 'a', -18 },
-    { 'Z',  21 },
-    { 'z', -21 },
-    { 'Y',  24 },
-    { 'y', -24 },
-    { 'R',  27 },
-    { 'r', -27 },
-    { 'Q',  30 },
-    { 'q', -30 }
+constexpr char prefixes[] {
+    'k',   3,
+    'm',  -3,
+    'M',   6,
+    'u',  -6,
+    'G',   9,
+    'n',  -9,
+    'T',  12,
+    'p', -12,
+    'h',   2,
+    'd',  -1,
+    'c',  -2,
+    'P',  15,
+    'f', -15,
+    'E',  18,
+    'a', -18,
+    'Z',  21,
+    'z', -21,
+    'Y',  24,
+    'y', -24,
+    'R',  27,
+    'r', -27,
+    'Q',  30,
+    'q', -30
 };
 
 template <unsigned N>
@@ -550,10 +550,10 @@ struct LiteralParser {
                     unit = FindUnit(a, b);
                     if (unit == numUnits && (b-a) > 1) {
                         const char c0 = *a;
-                        for (const auto& [ p, power ] : prefixes) {
-                            if (c0 == p) {
+                        for (unsigned i = 0; i < sizeof(prefixes); i += 2) {
+                            if (c0 == prefixes[i]) {
                                 unit = FindUnit(a + 1, b);
-                                prefix = power;
+                                prefix = prefixes[i + 1];
                                 break;
                             }
                         }
