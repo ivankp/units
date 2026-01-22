@@ -26,6 +26,10 @@ int main() {
     }
 }
 
+constexpr bool Within(auto a, auto b, auto tol) {
+    return ((1 - tol) * b < a) && (a < (1 + tol) * b);
+}
+
 #define STR(X) STR1(X)
 #define STR1(X) #X
 
