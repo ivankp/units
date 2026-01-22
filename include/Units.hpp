@@ -199,11 +199,6 @@ public:
         return value;
     }
 
-    template <typename U>
-    friend constexpr auto Cast(Quantity q) noexcept(noexcept(U(q.value))) {
-        return MakeQuantity<D>(U(q.value));
-    }
-
     // Comparison --------------------------------------------------------------
 
     template <typename R>
@@ -603,42 +598,55 @@ constexpr auto operator ""_uf() noexcept {
     return MakeQuantity<p.def.d>(float(p.def.factor));
 }
 
-template <detail::StringLiteral s>
-constexpr auto operator ""_ul() noexcept {
-    constexpr detail::LiteralParser p(s.begin(), s.end());
-    return MakeQuantity<p.def.d>((long double)p.def.factor);
-}
-
 } // namespace literals
 
 namespace simple_literals {
 using namespace units::literals;
 
+// use to double so that x._unit == x * "units"_u
 #define SimpleLiteral(NAME) \
     constexpr auto operator ""_##NAME(long double x) noexcept { \
-        return Cast<double>(x * #NAME ## _ul); \
+        return double(x) * #NAME ## _u; \
     }
 
+SimpleLiteral(cm)
+SimpleLiteral(d)
 SimpleLiteral(ft)
 SimpleLiteral(g)
 SimpleLiteral(h)
+SimpleLiteral(ha)
+SimpleLiteral(Hz)
 SimpleLiteral(in)
 SimpleLiteral(J)
 SimpleLiteral(kg)
+SimpleLiteral(kHz)
+SimpleLiteral(kJ)
+SimpleLiteral(km)
+SimpleLiteral(kPa)
+SimpleLiteral(kt)
+SimpleLiteral(kW)
+SimpleLiteral(kWh)
 SimpleLiteral(L)
 SimpleLiteral(lb)
 SimpleLiteral(lbf)
 SimpleLiteral(lbm)
 SimpleLiteral(m)
+SimpleLiteral(MHz)
 SimpleLiteral(mi)
 SimpleLiteral(min)
+SimpleLiteral(MJ)
+SimpleLiteral(mL)
+SimpleLiteral(mm)
 SimpleLiteral(MPa)
 SimpleLiteral(mph)
 SimpleLiteral(N)
 SimpleLiteral(Pa)
 SimpleLiteral(psi)
 SimpleLiteral(s)
+SimpleLiteral(t)
 SimpleLiteral(W)
+SimpleLiteral(Wh)
+SimpleLiteral(yd)
 
 #undef SimpleLiteral
 
