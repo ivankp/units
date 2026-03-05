@@ -39,12 +39,15 @@ fi
 PDF="${NAME}.pdf"
 
 if [ "$1" == "optimize" ]; then
-    if [ -f "${PDF}" ]; then
+    if [[ -f "$PDF" && "$(sed -n 's,.*<\(pdf:Producer\)>\(.*\)</\1>.*,\2,p' "$PDF")" != *Ghostscript* ]]; then
+        PrintSize() { stat -c '%s' "$PDF" | numfmt --to=iec --format="%5.0fB $PDF"; }
         for gs in gs gswin64; do
             if command -v "$gs" 2>&1 >/dev/null; then
-                "$gs" -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 \
-                    -dNOPAUSE -dQUIET -dBATCH -sOutputFile="tmp_${PDF}" "${PDF}"
-                mv "tmp_${PDF}" "${PDF}"
+                PrintSize
+                "$gs" -sDEVICE=pdfwrite -dCompatibilityLevel='1.4' \
+                    -dNOPAUSE -dQUIET -dBATCH -sOutputFile="tmp_$PDF" "$PDF"
+                mv "tmp_$PDF" "$PDF"
+                PrintSize
                 break
             fi
         done
@@ -56,7 +59,7 @@ DEP=("${NAME}.tex" "${DEP[@]}")
 
 md5() { md5sum "${NAME}.$1" 2> /dev/null; }
 
-newerDEPS() {
+NewerDEPS() {
     for x in "${DEP[@]}"; do
         [ "$x" -nt "$PDF" ] && return 0
     done
@@ -68,19 +71,19 @@ for (( i=1, n=1; i<=n; ++i )); do
     md5_aux="$(md5 aux)"
     md5_bcf="$(md5 bcf)"
     # run LaTeX
-    if (( i != 1 )) || newerDEPS; then
+    if (( i != 1 )) || NewerDEPS; then
         printf "\e[32;1m$i\e[0m\n"
-        if ! "${TEX[@]}" "${NAME}" > /dev/null; then
+        if ! "${TEX[@]}" "$NAME" > /dev/null; then
             warn=1
             break
         fi
     fi
     # check if need to run multiple times
     if (( i == 1 )) && ( # update bibliography
-        newerDEPS || [ "$md5_bcf" != "$(md5 bcf)" ]
+        NewerDEPS || [ "$md5_bcf" != "$(md5 bcf)" ]
     ); then
         printf '\e[32;1mbib\e[0m\n'
-        "${BIB[@]}" "${NAME}" | awk '''
+        "${BIB[@]}" "$NAME" | awk '''
             sub(/^WARN/,"\033[33m&\033[0m") || \
             sub(/^ERROR/,"\033[31m&\033[0m") \
             { print }
