@@ -1,0 +1,14 @@
+/*
+
+!.gitignore
+!*.tex
+!*.bib
+!*.sty
+!*.cls
+!*.lua
+!*.cfg
+
+!Makefile
+!*.sh
+
+!/fig/

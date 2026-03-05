@@ -1,0 +1,106 @@
+\documentclass[11pt,letterpaper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{indentfirst,amsmath,amssymb,enumitem}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage{textcomp}
+
+\usepackage{xspace,xcolor}
+\definecolor{green1}{HTML}{198019} % green from 1505.03893
+
+\usepackage[
+  hyperfootnotes=false,
+  linktoc=all,
+  colorlinks=true,
+  linkcolor=green1,
+  citecolor=green1,
+  urlcolor=blue,
+  pdfauthor={Ivan Pogrebnyak},
+  pdftitle={Units in C++},
+  pdfsubject={},
+  pdfkeywords={units, C++}
+]{hyperref}
+
+\title{Units in C++}
+\author{Ivan Pogrebnyak}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction} % ===========================================================================
+
+Any physics or engineering simulation software has to account for units,
+whether it is done explicitly or implicitly.
+In this document, we discuss a new units library for C++ that leverages the type system to
+represent units.
+The library provides features to define dimensionful quantities,
+perform arithmetic operations on them, and validate compatibility of quantities at compile time.
+
+\section{Theory} % =================================================================================
+
+A physical \textbf{quantity}, such as volume or pressure, can be divided into two components:
+\textbf{units}, specifying the type of quantity, and the quantity's \textbf{value}, specifying how
+large the quantity is in the given units.
+
+Geometrically, units can be viewed as \textbf{dimensions} of quantities. Much like a point
+in 3-dimensional space can be represented by a vector $(x,y,z)$, quantities in mechanics have
+dimensions of mass, length, and time. The units' dimensions are discrete-valued. For example,
+represented as (mass, length, and time) vectors, speed units have dimensions $(0,1,-1)$, and those
+for energy are $(1,2,-2)$.
+
+Algebraically, units are multiplicative factors, orthogonal to the quantity's value.
+For example, a length quantity can be expressed as 5 m, which can be thought of as multiplication
+between a numeric value 5 and units m. Two lengths multiplied yields an area,
+$5~\text{m} \times 3~\text{m} = 15~\text{m}^2$.
+Note that both values and units were multiplied. Addition is typically only useful to define between
+quantities with the same dimensions, while multiplication and division are meaningful in all cases.
+For example, $\text{force} / \text{mass} = \text{acceleration}$.
+
+Apples and oranges don't really behave algebraically like units. One is not typically interested in
+oranges$^2$, while they may want to buy $5~\text{apples} + 3~\text{oranges}$.
+
+Typically, multiple units exist for the same type of quantity, i.e. vector of dimensions. For
+example, length can be measured in m, mm, km, mi, in, ft, etc. Mathematically, conversions between
+these redundant units amount to multiplication by dimensionless factors. However, floating-point
+arithmetic on a computer is not associative. When implementing a units system, it is important to
+think about how conversions are handled and at what point. And, as always, one must find the optimal
+trade-off between numeric precision, user friendliness, difficulty of implementation and
+maintenance, and overhead at run time and compile time.
+
+\section{The units library} % =================================================================
+
+\subsection{Example}
+
+To illustrate what problems the library addresses and how it solves them,
+let us start with a simple example.
+Consider a physics simulation involving projectile motion.
+Projectiles may be represented as classes with member variable containing relevant quantities,
+such as projectile's mass, position, velocity, etc.
+Without explicitly accounting for units, the implementation may look like this.
+
+\section{Implementation choices} % =================================================================
+
+\subsection{Run-time or compile-time representation of units}
+
+\subsection{Immediate or delayed conversion}
+
+\subsection{Static or dynamic number of dimensions}
+
+\subsection{Distinguishing units with equal dimensions but distinct meaning}
+
+Dimensionless quantities: degrees, radians. Degrees as a factor: std::sin(15 * "deg"\_u).
+
+\section{Future features} % ========================================================================
+
+Features that can but haven't been implemented.
+
+\subsection{Rational powers}
+
+\subsection{User-defined units and relative definitions}
+
+\InputIfFileExists{extra}{}{}
+
+\end{document}
