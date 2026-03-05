@@ -8,17 +8,55 @@
 \usepackage{DejaVuSansMono}
 
 \usepackage{xspace,xcolor}
-\definecolor{green1}{HTML}{198019} % green from 1505.03893
-\definecolor{cern}{HTML}{0033A0}
-\definecolor{cern80}{HTML}{385CB4}
+% \definecolor{green1}{HTML}{198019} % green from 1505.03893
+% \definecolor{cern}{HTML}{0033A0}
+% \definecolor{cern80}{HTML}{385CB4}
 
-% \usepackage{minted}
-% \setminted{fontsize=\footnotesize}
+\definecolor{lstType}{HTML}{22863A}
+\definecolor{lstKeyword}{HTML}{A67f59}
+\definecolor{lstLiteral}{HTML}{990055}
+\definecolor{lstNamespace}{HTML}{555555}
+\definecolor{lstFunction}{HTML}{0077AA}
+\definecolor{lstComment}{HTML}{708090}
 
 \usepackage{listings}
 \lstset{
-    basicstyle=\footnotesize\ttfamily,
-    escapeinside={(*@}{@*)}
+    upquote=true,
+%
+    moredelim=[is][\color{lstType}]{@T}{@},
+    moredelim=[is][\bfseries\color{lstType}]{@Tb}{@},
+    moredelim=[is][\color{lstKeyword}]{@K}{@},
+    moredelim=[is][\color{lstLiteral}]{@L}{@},
+    moredelim=[is][\color{lstNamespace}]{@N}{@},
+    moredelim=[is][\color{lstFunction}]{@F}{@},
+%
+    basicstyle={\footnotesize\ttfamily},
+%
+    morecomment=[l]{//}, % l is for line comment
+    morecomment=[s]{/*}{*/}, % s is for start and end delimiter
+    commentstyle={\itshape\color{lstComment}},
+%
+    morestring=[b]", % defines that strings are enclosed in double quotes
+    morestring=[b]', % defines that strings are enclosed in double quotes
+    stringstyle=\color{lstLiteral},
+%
+    morekeywords=[0]{
+alignas, alignof, and, and_eq, asm, bitand, bitor, break, case, catch, class, co_await, co_return,
+co_yield, compl, concept, const, const_cast, consteval, constexpr, constinit, continue,
+contract_assert, decltype, default, delete, do, dynamic_cast, else, enum, explicit, export, extern,
+for, friend, goto, if, inline, mutable, namespace, new, noexcept, not, not_eq, operator, or, or_eq,
+private, protected, public, reflexpr, register, reinterpret_cast, requires, return, sizeof, static,
+static_assert, static_cast, struct, switch, synchronized, template, this, thread_local, throw, try,
+typedef, typeid, typename, union, using, virtual, volatile, while, xor, xor_eq
+    },
+    keywordstyle=[0]\color{lstKeyword},
+%
+    morekeywords=[1]{float, double, char, short, int, long, unsigned},
+    keywordstyle=[1]\color{lstType},
+%
+    otherkeywords={::},
+    keywords=[2]{::},
+    keywordstyle=[2]\color{lstComment},
 }
 
 \usepackage[
@@ -93,16 +131,14 @@ Projectiles may be represented as classes with member variable containing releva
 such as projectile's mass, position, velocity, etc.
 Without explicitly accounting for units, the implementation may look like this.
 
-% \begin{minted}{c++}
-\begin{lstlisting}[language=C++]
-class Projectile {
+\begin{lstlisting}
+class @TbProjectile@ {
     double mass;
     double volume;
-    std::array<double, 3> position;
-    std::array<double, 3> velocity;
+    @Nstd@::@Tarray@<double, @L3@> position;
+    @Nstd@::@Tarray@<double, @L3@> velocity;
 };
 \end{lstlisting}
-% \end{minted}
 
 \section{Implementation choices} % =================================================================
 
