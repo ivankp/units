@@ -5,9 +5,21 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T2A]{fontenc}
 \usepackage{textcomp}
+\usepackage{DejaVuSansMono}
 
 \usepackage{xspace,xcolor}
 \definecolor{green1}{HTML}{198019} % green from 1505.03893
+\definecolor{cern}{HTML}{0033A0}
+\definecolor{cern80}{HTML}{385CB4}
+
+% \usepackage{minted}
+% \setminted{fontsize=\footnotesize}
+
+\usepackage{listings}
+\lstset{
+    basicstyle=\footnotesize\ttfamily,
+    escapeinside={(*@}{@*)}
+}
 
 \usepackage[
   hyperfootnotes=false,
@@ -80,6 +92,17 @@ Consider a physics simulation involving projectile motion.
 Projectiles may be represented as classes with member variable containing relevant quantities,
 such as projectile's mass, position, velocity, etc.
 Without explicitly accounting for units, the implementation may look like this.
+
+% \begin{minted}{c++}
+\begin{lstlisting}[language=C++]
+class Projectile {
+    double mass;
+    double volume;
+    std::array<double, 3> position;
+    std::array<double, 3> velocity;
+};
+\end{lstlisting}
+% \end{minted}
 
 \section{Implementation choices} % =================================================================
 
