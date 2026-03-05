@@ -8,7 +8,7 @@
 \usepackage{DejaVuSansMono}
 
 \usepackage{xspace,xcolor}
-% \definecolor{green1}{HTML}{198019} % green from 1505.03893
+\definecolor{green1}{HTML}{198019} % green from 1505.03893
 % \definecolor{cern}{HTML}{0033A0}
 % \definecolor{cern80}{HTML}{385CB4}
 
@@ -39,6 +39,7 @@
     morestring=[b]", % defines that strings are enclosed in double quotes
     morestring=[b]', % defines that strings are enclosed in double quotes
     stringstyle=\color{lstLiteral},
+    showstringspaces=false,
 %
     morekeywords=[0]{
 alignas, alignof, and, and_eq, asm, bitand, bitor, break, case, catch, class, co_await, co_return,
@@ -51,12 +52,12 @@ typedef, typeid, typename, union, using, virtual, volatile, while, xor, xor_eq
     },
     keywordstyle=[0]\color{lstKeyword},
 %
-    morekeywords=[1]{float, double, char, short, int, long, unsigned},
+    morekeywords=[1]{void, char, int, short, long, signed, unsigned, float, double},
     keywordstyle=[1]\color{lstType},
 %
     otherkeywords={::},
     keywords=[2]{::},
-    keywordstyle=[2]\color{lstComment},
+    keywordstyle=[2]\color{lstNamespace},
 }
 
 \usepackage[
@@ -127,18 +128,118 @@ maintenance, and overhead at run time and compile time.
 To illustrate what problems the library addresses and how it solves them,
 let us start with a simple example.
 Consider a physics simulation involving projectile motion.
-Projectiles may be represented as classes with member variable containing relevant quantities,
-such as projectile's mass, position, velocity, etc.
-Without explicitly accounting for units, the implementation may look like this.
+For the sake of the argument, let's assume that there is a function that adds projectiles with a
+given mass to the simulation.
 
 \begin{lstlisting}
-class @TbProjectile@ {
-    double mass;
-    double volume;
-    @Nstd@::@Tarray@<double, @L3@> position;
-    @Nstd@::@Tarray@<double, @L3@> velocity;
-};
+void @FAddProjectile@(double mass);
 \end{lstlisting}
+
+As is, the \lstinline{@FAddProjectile@()} function expects \lstinline{mass} in certain units.
+These units are at best stated in a comment somewhere; and at worst, not stated anywhere at all.
+
+It is not unreasonable for a library to internally assume a single mass unit, e.g. kg,
+and perform all internal calculations without converting between kg and lb.
+But if \lstinline{@FAddProjectile@()} is a part of the interface, the value that should be passed to
+it may come from another library that made a different assumption and chose lb as base units instead
+of kg. The situation may be as follows.
+%
+\begin{lstlisting}
+double @Nfoo@::@FGetMass@(); // returns mass in lb
+void @Nbar@::@FAddProjectile@(double mass); // takes mass in kg
+\end{lstlisting}
+%
+A call like this would be incorrect.
+%
+\begin{lstlisting}
+@Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@()); // Mistakenly forgot to convert lb to kg
+\end{lstlisting}
+%
+But a software engineer who read the documentation for both libraries is the only one that can catch
+this mistake.
+The compiler cannot provide any help here.
+
+The \lstinline{@Nunits@} library can help with this problem.
+Exactly what is the best approach, depend on whether we own
+\lstinline{@Nfoo@} and \lstinline{@Nbar@}.
+
+First, let's assume that we can modify neither
+\lstinline{@Nfoo@} nor \lstinline{@Nbar@}.
+In this case, the best we can do is apply a conversion factor.
+It may be tempting to say that in this case a library does not have much to offer, as we can just
+define a conversion factor.
+%
+\begin{lstlisting}
+const double lb_to_kg = @L0.45359237@;
+@Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@() * lb_to_kg);
+\end{lstlisting}
+%
+But how many conversion factors does a whole simulation application codebase need?
+How do we avoid redefining the same conversion factors?
+How do we make sure the factors are defined accurately and consistently?
+Using the \lstinline{@Nunits@} library, we can avoid these questions and use consistent definitions.
+%
+\begin{lstlisting}
+using namespace @Nunits@::@Nliterals@;
+@Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@() * "kg/lb"@L_u@);
+\end{lstlisting}
+
+If we own \lstinline{@Nbar@} but not \lstinline{@Nfoo@}, we can change the signature of
+\lstinline{@FAddProjectile@()} to take a mass quantity.
+%
+\begin{lstlisting}
+using @Nunits@::@Nquantities@::@TMass@;
+void @Nbar@::@FAddProjectile@(@TMass@<double> mass); // units-aware definition
+\end{lstlisting}
+%
+With this change,
+%
+\begin{lstlisting}
+@Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@()); // Compilation error: dimensionless
+@Nbar@::@FAddProjectile@(@L5@); // Compilation error: dimensionless
+@Nbar@::@FAddProjectile@(@L7.1@ * "m"@L_u@); // Compilation error: meters are not mass units
+\end{lstlisting}
+%
+all produce errors at compile-time, as neither of the arguments are convertible to
+\lstinline{@TMass@<double>}.
+Valid calls would look like this.
+%
+\begin{lstlisting}
+@Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@() * "lb"@L_u@);
+@Nbar@::@FAddProjectile@(@L7.1@ * "kg"@L_u@);
+\end{lstlisting}
+%
+Code becomes self-documenting and unit correctness is checked at compile time.
+Note, that on the first line above \lstinline{"lb"@L_u@} is not a mistake.
+The user needs to specify the units of the quantity that they have and the library handles the
+conversion.
+
+If we own \lstinline{@Nfoo@} but not \lstinline{@Nbar@}, we can change the signature of
+\lstinline{@FGetMass@()} to return a mass quantity.
+%
+\begin{lstlisting}
+using @Nunits@::@Nquantities@::@TMass@;
+@TMass@<double> @Nfoo@::@FGetMass@(); // units-aware definition
+\end{lstlisting}
+%
+The corresponding call to unmodified \lstinline{@FAddProjectile@()} would look like this,
+%
+\begin{lstlisting}
+@Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@() / "kg"@L_u@);
+\end{lstlisting}
+%
+We divide by \lstinline{"kg"@L_u@} because we need the value in kg.
+Here, again, code becomes self-documenting as units have to be explicitly stated, or it won't
+compile.
+
+And finally, if we own both \lstinline{@Nfoo@} and \lstinline{@Nbar@}, we can modify both functions
+to operate on units-aware quantities, making the following expression valid and correct.
+%
+\begin{lstlisting}
+@Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@());
+\end{lstlisting}
+Note, that now, if the above expression compiles, we have a strong guarantee that the quantities
+are compatible between the two functions.
 
 \section{Implementation choices} % =================================================================
 
