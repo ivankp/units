@@ -121,9 +121,9 @@ think about how conversions are handled and at what point. And, as always, one m
 trade-off between numeric precision, user friendliness, difficulty of implementation and
 maintenance, and overhead at run time and compile time.
 
-\section{The units library} % =================================================================
+\section{The units library} % ======================================================================
 
-\subsection{Example}
+\subsection{Example} % -----------------------------------------------------------------------------
 
 To illustrate what problems the library addresses and how it solves them,
 let us start with a simple example.
@@ -139,10 +139,10 @@ As is, the \lstinline{@FAddProjectile@()} function expects \lstinline{mass} in c
 These units are at best stated in a comment somewhere; and at worst, not stated anywhere at all.
 
 It is not unreasonable for a library to internally assume a single mass unit, e.g. kg,
-and perform all internal calculations without converting between kg and lb.
+and perform all internal calculations without converting between kilograms and pounds.
 But if \lstinline{@FAddProjectile@()} is a part of the interface, the value that should be passed to
-it may come from another library that made a different assumption and chose lb as base units instead
-of kg. The situation may be as follows.
+it may come from another library that made a different assumption and chose pounds as base units
+instead of kilograms. The situation may be as follows.
 %
 \begin{lstlisting}
 double @Nfoo@::@FGetMass@(); // returns mass in lb
@@ -155,13 +155,13 @@ A call like this would be incorrect.
 @Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@()); // Mistakenly forgot to convert lb to kg
 \end{lstlisting}
 %
-But a software engineer who read the documentation for both libraries is the only one that can catch
+A software engineer who read the documentation for both libraries is the only one that can catch
 this mistake.
 The compiler cannot provide any help here.
 
 The \lstinline{@Nunits@} library can help with this problem.
-Exactly what is the best approach, depend on whether we own
-\lstinline{@Nfoo@} and \lstinline{@Nbar@}.
+Exactly what is the best approach, depends on whether we own
+\lstinline{@Nfoo@} or \lstinline{@Nbar@}.
 
 First, let's assume that we can modify neither
 \lstinline{@Nfoo@} nor \lstinline{@Nbar@}.
@@ -209,10 +209,9 @@ Valid calls would look like this.
 @Nbar@::@FAddProjectile@(@L7.1@ * "kg"@L_u@);
 \end{lstlisting}
 %
-Code becomes self-documenting and unit correctness is checked at compile time.
-Note, that on the first line above \lstinline{"lb"@L_u@} is not a mistake.
-The user needs to specify the units of the quantity that they have and the library handles the
-conversion.
+We multiply by \lstinline{"lb"@L_u@} to specify the units of the quantity that we have.
+The library uses its definition of pounds to provide the right mass quantity.
+The code becomes self-documenting and unit correctness is checked at compile time.
 
 If we own \lstinline{@Nfoo@} but not \lstinline{@Nbar@}, we can change the signature of
 \lstinline{@FGetMass@()} to return a mass quantity.
@@ -228,8 +227,8 @@ The corresponding call to unmodified \lstinline{@FAddProjectile@()} would look l
 @Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@() / "kg"@L_u@);
 \end{lstlisting}
 %
-We divide by \lstinline{"kg"@L_u@} because we need the value in kg.
-Here, again, code becomes self-documenting as units have to be explicitly stated, or it won't
+We divide by \lstinline{"kg"@L_u@} because we need the value in kilograms.
+Here, again, the code becomes self-documenting, as units have to be explicitly stated, or it won't
 compile.
 
 And finally, if we own both \lstinline{@Nfoo@} and \lstinline{@Nbar@}, we can modify both functions
@@ -241,15 +240,17 @@ to operate on units-aware quantities, making the following expression valid and 
 Note, that now, if the above expression compiles, we have a strong guarantee that the quantities
 are compatible between the two functions.
 
+\subsection{Implementation synopsis} % -------------------------------------------------------------
+
 \section{Implementation choices} % =================================================================
 
-\subsection{Run-time or compile-time representation of units}
+\subsection{Run-time or compile-time representation of units} % ------------------------------------
 
-\subsection{Immediate or delayed conversion}
+\subsection{Immediate or delayed conversion} % -----------------------------------------------------
 
-\subsection{Static or dynamic number of dimensions}
+\subsection{Static or dynamic number of dimensions} % ----------------------------------------------
 
-\subsection{Distinguishing units with equal dimensions but distinct meaning}
+\subsection{Distinguishing units with equal dimensions but distinct meaning} % ---------------------
 
 Dimensionless quantities: degrees, radians. Degrees as a factor: std::sin(15 * "deg"\_u).
 
@@ -257,9 +258,9 @@ Dimensionless quantities: degrees, radians. Degrees as a factor: std::sin(15 * "
 
 Features that can but haven't been implemented.
 
-\subsection{Rational powers}
+\subsection{Rational powers} % ---------------------------------------------------------------------
 
-\subsection{User-defined units and relative definitions}
+\subsection{User-defined units and relative definitions} % -----------------------------------------
 
 \InputIfFileExists{extra}{}{}
 
