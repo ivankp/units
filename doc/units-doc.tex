@@ -63,7 +63,7 @@ typedef, typeid, typename, union, using, virtual, volatile, while, xor, xor_eq
     },
     keywordstyle=[0]\color{lstKeyword},
 %
-    morekeywords=[1]{void, char, int, short, long, signed, unsigned, float, double},
+    morekeywords=[1]{auto, void, char, int, short, long, signed, unsigned, float, double},
     keywordstyle=[1]\color{lstType},
 %
     otherkeywords={::},
@@ -85,6 +85,15 @@ typedef, typeid, typename, union, using, virtual, volatile, while, xor, xor_eq
 ]{hyperref}
 
 \newcommand{\lib}{\lstinline{@Nunits@} library}
+
+\newcounter{lstcnt}[section]
+\newenvironment{lstfloat}{%
+  \refstepcounter{lstcnt}
+  \noindent
+  \begin{minipage}{0.9\textwidth}
+}{%
+  \end{minipage}\hfill(\thesection.\thelstcnt)
+}
 
 \title{Units in C\++}
 \author{Ivan Pogrebnyak}
@@ -290,15 +299,50 @@ template <typename @TT@>
 using @TSpeed@ = @TQuantity@<{@L0@, @L1@, @L-1@}, @TT@>;
 \end{lstlisting}
 
-To reduce the space of possible mistakes and to keep implementation detail of the library opaque
-to the user (to reduce unnecessary relying on them), the \lstinline{@TQuantity@} constructor is
-made private, except for the dimensionless case.
-This prevent the user from creating dimensionful quantities with ambiguous units.
+To reduce the space of possible mistakes and to keep the implementation details of the library
+opaque to the user, the \lstinline{@TQuantity@} constructor is made private,
+except for the dimensionless case.
+This prevents the user from creating dimensionful quantities with ambiguous units.
+%
 \begin{lstlisting}
 @TQuantity@<{@L1@, @L0@, @L0@}, double> mass(@L5.3@); // Compilation error
                                        // What are the units of this mass?
 @TQuantity@<{@L0@, @L0@, @L0@}, double> number(@L7.13@); // OK
                                           // This is a dimensionless number
+\end{lstlisting}
+
+The intended mechanism of creating dimensionful quantities in the \lib{} is via
+user-defined literals.
+A literal constructs a \lstinline{constexpr} \lstinline{@TQuantity@} with the value equal to
+$1$ in the corresponding units.
+The literals are defined under the \lstinline{@Nunits@::@Nliterals@} namespace.
+For example,
+%
+\begin{lstlisting}
+using namespace @Nunits@::@Nliterals@;
+auto length = "m"@L_u@; // equivalent to 1 meter
+\end{lstlisting}
+%
+The type of \lstinline{length} is \lstinline|@TQuantity@<{@L0@, @L1@, @L0@}, double>|.
+
+The underscore in the \lstinline{@L_u@} suffix is required by the C\++ standard,
+because literal suffixes without a leading underscore are reserved for the standard library.
+The \lstinline{@L_u@} suffix creates \lstinline{double} quantities.
+The library also provides a \lstinline{@L_uf@} suffix to create \lstinline{float} quantities.
+
+The intended way to use the \lstinline{@Nunits@} literals is to specify both the value and
+the units via multiplication.
+%
+\begin{lstlisting}
+auto length = @L2.3@ * "m"@L_u@; // equivalent to 2.3 meter
+\end{lstlisting}
+%
+Thus, multiplication can be thought of as a way to imbue values with units.
+Conversely, division can be used to convert a quantity to specific units.
+%
+\begin{lstlisting}
+auto length = @L3@ * "ft"@L_u@;
+double length_in_ft = length / "m"@L_u@; // equal to 0.9144
 \end{lstlisting}
 
 \section{Implementation choices} % =================================================================
