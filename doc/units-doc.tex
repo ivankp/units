@@ -7,13 +7,24 @@
 \usepackage{textcomp}
 \usepackage{DejaVuSansMono}
 
-\usepackage{xspace,xcolor}
+% https://tex.stackexchange.com/q/567250/35990
+\newcommand{\textplus}[1][+]{\raisebox{% font-independent height
+  \dimexpr(\fontcharht\font`X-\height+\depth)/2\relax
+}{#1}}
+
+\ExplSyntaxOn
+\NewDocumentCommand\+{}{
+  \peek_charcode_remove:NTF + {\textplus[++]}{\textplus[+]}
+}
+\ExplSyntaxOff
+
+\usepackage{xcolor}
 \definecolor{green1}{HTML}{198019} % green from 1505.03893
 % \definecolor{cern}{HTML}{0033A0}
 % \definecolor{cern80}{HTML}{385CB4}
 
-\definecolor{lstType}{HTML}{22863A}
-\definecolor{lstKeyword}{HTML}{A67f59}
+\definecolor{lstType}{HTML}{088A00}
+\definecolor{lstKeyword}{HTML}{BF5908}
 \definecolor{lstLiteral}{HTML}{990055}
 \definecolor{lstNamespace}{HTML}{555555}
 \definecolor{lstFunction}{HTML}{0077AA}
@@ -73,7 +84,7 @@ typedef, typeid, typename, union, using, virtual, volatile, while, xor, xor_eq
   pdfkeywords={units, C++}
 ]{hyperref}
 
-\title{Units in C++}
+\title{Units in C\++}
 \author{Ivan Pogrebnyak}
 \date{\today}
 
@@ -85,7 +96,7 @@ typedef, typeid, typename, union, using, virtual, volatile, while, xor, xor_eq
 
 Any physics or engineering simulation software has to account for units,
 whether it is done explicitly or implicitly.
-In this document, we discuss a new units library for C++ that leverages the type system to
+In this document, we discuss a new units library for C\++ that leverages the type system to
 represent units.
 The library provides features to define dimensionful quantities,
 perform arithmetic operations on them, and validate compatibility of quantities at compile time.
