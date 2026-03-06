@@ -84,6 +84,8 @@ typedef, typeid, typename, union, using, virtual, volatile, while, xor, xor_eq
   pdfkeywords={units, C++}
 ]{hyperref}
 
+\newcommand{\lib}{\lstinline{@Nunits@} library}
+
 \title{Units in C\++}
 \author{Ivan Pogrebnyak}
 \date{\today}
@@ -136,7 +138,7 @@ maintenance, and overhead at run time and compile time.
 
 \subsection{Example} % -----------------------------------------------------------------------------
 
-To illustrate what problems the library addresses and how it solves them,
+To illustrate what problems the \lib{} addresses and how it solves them,
 let us start with a simple example.
 Consider a physics simulation involving projectile motion.
 For the sake of the argument, let's assume that there is a function that adds projectiles with a
@@ -170,7 +172,7 @@ A software engineer who read the documentation for both libraries is the only on
 this mistake.
 The compiler cannot provide any help here.
 
-The \lstinline{@Nunits@} library can help with this problem.
+The \lib{} can help with this problem.
 Exactly what is the best approach, depends on whether we own
 \lstinline{@Nfoo@} or \lstinline{@Nbar@}.
 
@@ -188,7 +190,7 @@ const double lb_to_kg = @L0.45359237@;
 But how many conversion factors does a whole simulation application codebase need?
 How do we avoid redefining the same conversion factors?
 How do we make sure the factors are defined accurately and consistently?
-Using the \lstinline{@Nunits@} library, we can avoid these questions and use consistent definitions.
+Using the \lib, we can avoid these questions and use consistent definitions.
 %
 \begin{lstlisting}
 using namespace @Nunits@::@Nliterals@;
@@ -221,7 +223,7 @@ Valid calls would look like this.
 \end{lstlisting}
 %
 We multiply by \lstinline{"lb"@L_u@} to specify the units of the quantity that we have.
-The library uses its definition of pounds to provide the right mass quantity.
+The \lib{} uses its definition of pounds to provide the right mass quantity.
 The code becomes self-documenting and unit correctness is checked at compile time.
 
 If we own \lstinline{@Nfoo@} but not \lstinline{@Nbar@}, we can change the signature of
@@ -252,6 +254,52 @@ Note, that now, if the above expression compiles, we have a strong guarantee tha
 are compatible between the two functions.
 
 \subsection{Implementation synopsis} % -------------------------------------------------------------
+
+The main construct of the \lib{} is
+%
+\begin{lstlisting}
+template <@TDimensions@ D, typename @TT@>
+class @TQuantity@ {
+    // . . .
+};
+\end{lstlisting}
+%
+\lstinline{@TQuantity@} wraps a value of type \lstinline{@TT@} and tags it with units of dimensions
+\lstinline{D}.
+The \lstinline{typename @TT@} template parameter is constrained to not be a \lstinline{@TQuantity@}
+to avoid constructs with multiple levels of units.
+%
+\begin{lstlisting}
+struct @TDimensions@ {
+    int mass, length, time;
+    // . . .
+};
+\end{lstlisting}
+%
+implements a \lstinline{constexpr} integral-valued vector with arithmetic operations
+for multiplication and exponentiation of quantities.
+The tagging is done purely to introduce units to the type system and has no effect at run time.
+At compile time, \lstinline{@TDimensions@} provide means to check compatibility of quantities'
+units and units' arithmetic.
+
+The library provides a number of predefined aliases for specific quantity types.
+For example, speed is represented as
+%
+\begin{lstlisting}
+template <typename @TT@>
+using @TSpeed@ = @TQuantity@<{@L0@, @L1@, @L-1@}, @TT@>;
+\end{lstlisting}
+
+To reduce the space of possible mistakes and to keep implementation detail of the library opaque
+to the user (to reduce unnecessary relying on them), the \lstinline{@TQuantity@} constructor is
+made private, except for the dimensionless case.
+This prevent the user from creating dimensionful quantities with ambiguous units.
+\begin{lstlisting}
+@TQuantity@<{@L1@, @L0@, @L0@}, double> mass(@L5.3@); // Compilation error
+                                       // What are the units of this mass?
+@TQuantity@<{@L0@, @L0@, @L0@}, double> number(@L7.13@); // OK
+                                          // This is a dimensionless number
+\end{lstlisting}
 
 \section{Implementation choices} % =================================================================
 
