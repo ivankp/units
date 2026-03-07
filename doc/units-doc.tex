@@ -295,11 +295,13 @@ At compile time, \lstinline{@TDimensions@} provide means to check compatibility 
 units and units' arithmetic.
 
 The library provides a number of predefined aliases for specific quantity types.
-For example, speed is represented as
+For example, speed and velocity are represented as
 %
 \begin{lstlisting}
 template <typename @TT@>
 using @TSpeed@ = @TQuantity@<{@L0@, @L1@, @L-1@}, @TT@>;
+template <typename @TT@>
+using @TVelocity@ = @TSpeed@<@TT@>;
 \end{lstlisting}
 
 To reduce the space of possible mistakes and to keep the implementation details of the library
@@ -354,7 +356,7 @@ its division and multiplication implemented respectively.
 Addition and subtraction are implemented likewise, but only for pairs of
 quantities with equal dimensions.
 
-Dimensionless quantities are implicitly convertible to references to their value.
+Dimensionless quantities are implicitly convertible to references to their values.
 This feature works in tandem with multiplication and division operators.
 For example, assuming that \lstinline{@TVec3@} implements a 3-dimensional vector type
 with overloaded operators.
