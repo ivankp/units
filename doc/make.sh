@@ -38,7 +38,7 @@ fi
 
 PDF="${NAME}.pdf"
 
-if [ "$1" == "optimize" ]; then
+if [ "$1" == "optimize" ] || [ "$1" == "opt" ]; then
     if [[ -f "$PDF" && "$(sed -n 's,.*<\(pdf:Producer\)>\(.*\)</\1>.*,\2,p' "$PDF")" != *Ghostscript* ]]; then
         PrintSize() { stat -c '%s' "$PDF" | numfmt --to=iec --format="%5.0fB $PDF"; }
         for gs in gs gswin64; do
