@@ -195,7 +195,11 @@ public:
     }
 
     // Conversion operator for dimensionless quantities
-    constexpr operator T() const noexcept requires (!D) {
+    constexpr operator const T&() const noexcept requires (!D) {
+        return value;
+    }
+    // Conversion operator for dimensionless quantities
+    constexpr operator T&() noexcept requires (!D) {
         return value;
     }
 
