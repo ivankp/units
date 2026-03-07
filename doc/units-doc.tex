@@ -7,6 +7,8 @@
 \usepackage{textcomp}
 \usepackage{DejaVuSansMono}
 
+\setlist[enumerate]{topsep=3pt, itemsep=0pt}
+
 % https://tex.stackexchange.com/q/567250/35990
 \newcommand{\textplus}[1][+]{\raisebox{% font-independent height
   \dimexpr(\fontcharht\font`X-\height+\depth)/2\relax
@@ -29,6 +31,8 @@
 
 \usepackage{listings}
 \lstset{
+    xleftmargin=0.25in,
+%
     upquote=true,
 %
     moredelim=[is][\color{lstType}]{@T}{@},
@@ -61,7 +65,7 @@ typedef, typeid, typename, union, using, virtual, volatile, while, xor, xor_eq
     },
     keywordstyle=[0]\color{lstKeyword},
 %
-    morekeywords=[1]{auto, void, char, int, short, long, signed, unsigned, float, double},
+    morekeywords=[1]{auto, void, bool, char, int, short, long, signed, unsigned, float, double},
     keywordstyle=[1]\color{lstType},
 %
     otherkeywords={::},
@@ -89,14 +93,13 @@ typedef, typeid, typename, union, using, virtual, volatile, while, xor, xor_eq
 
 \newcommand{\lib}{\lstinline{@Nunits@} library}
 
-\newcounter{lstcnt}[section]
-\newenvironment{lstfloat}{%
-  \refstepcounter{lstcnt}
-  \noindent
-  \begin{minipage}{0.9\textwidth}
-}{%
-  \end{minipage}\hfill(\thesection.\thelstcnt)
-}
+% \newenvironment{lstfloat}{%
+%   \refstepcounter{lstcnt}
+%   \noindent
+%   \begin{minipage}{0.9\textwidth}
+% }{%
+%   \end{minipage}\hfill\lstinline{\thesection.\thelstcnt}
+% }
 
 \title{Units in C\++}
 \author{Ivan Pogrebnyak}
@@ -272,6 +275,7 @@ The main construct of the \lib{} is
 \begin{lstlisting}
 template <@TDimensions@ D, typename @TT@>
 class @TQuantity@ {
+    @TT@ value;
     // . . .
 };
 \end{lstlisting}
@@ -384,7 +388,7 @@ As in the example in \autoref{sec:example}, we can call this function like this
 %
 This works, because the result of division by the literal is a dimensionless quantity,
 and as such, it is convertible to a reference to it's value.
-The following, however, do not work.
+Conversely, the following do not work, because the passed quantities are not dimensionless.
 %
 \begin{lstlisting}
 @Nthirdparty@::@FCalculate@(velocity); // compilation error
@@ -404,16 +408,95 @@ auto velocity_in_mph = position / "mph"@L_u@; // compiles, but is likely a bug
 To provide a way to get the value of a quantity in specific units and simultaneously check
 that the dimensions are compatible, the \lib{} implements the
 \lstinline{@FTo@()} function.
+%
 \begin{lstlisting}
 auto not_velocity_in_mph = @Nunits@::@FTo@<"mph">(position); // compilation error
 auto velocity_in_mph = @Nunits@::@FTo@<"mph">(velocity); // OK
 \end{lstlisting}
 
+\subsection{Literals' features} % ------------------------------------------------------------------
+
 \section{Implementation choices} % =================================================================
 
 \subsection{Run-time or compile-time representation of units} % ------------------------------------
 
+A core aim of the \lib{} is to provide compile-time guarantees on units' correctness.
+This would not be possible to achieve if units were implemented as member variables rather
+than template parameters.
+It is, nevertheless, worth explicitly stating this choice, because it fundamentally affects
+the whole library implementation.
+
+Some of the benefits of compile-time representation are:
+\begin{enumerate}
+    \item Mistakes with units produce compilation errors rather than run-time errors.
+        Bugs can be caught at an earlier stage in development.
+    \item Use of template parameters rather than member variables reduces the memory footprint.
+        This can especially affect small values, such as \lstinline{float}, which have smaller
+        size and alignment than pointers.
+    \item Negligible run-time overhead.
+        All the necessary conversions are determined at compile time.
+        \lstinline{@TQuantity@} is a thin wrapper around its value.
+\end{enumerate}
+
+There are potential advantages to a run-time implementation of units.
+We mention them here for the sake of completeness.
+However, the author's opinion is that benefits of compile-time checks outweigh these advantages.
+\begin{enumerate}
+    \item It is easier to implement new units in terms of existing ones and let users
+        define their own units.
+    \item It is easier to implement dynamic number of dimensions.
+\end{enumerate}
+
 \subsection{Immediate or delayed conversion} % -----------------------------------------------------
+
+Immediate conversion:
+\begin{enumerate}
+    \item Internally, quantities store values in some default units.
+    \item The internal choice of units can be opaque to the user.
+    \item When quantities with other units are created, they are immediately converted to
+      default units.
+\end{enumerate}
+
+Delayed conversion:
+\begin{enumerate}
+    \item Quantities' values and units are kept as is.
+    \item Conversion, if needed, occurs at the point of consumption.
+\end{enumerate}
+
+The main benefit of immediate conversion is more straightforward implementation.
+
+The benefit of delayed conversion is in precision.
+Floating-point arithmetic is not associative and has finite precision.
+%
+If a function receiving the values internally uses units that are not the default units of the
+units library, the values received by the function may never be
+exactly equal to the values used to construct the quantities with units.
+
+For simplicity, the \lib{} implements immediate conversion.
+Internally, the library uses base SI units: kg, m, s.
+%
+\begin{lstlisting}
+auto value = @Nunits@::@FTo@<"ft">(@L1.33@ * "ft"@L_u@);
+bool test = (value == @L1.33@); // may be false
+\end{lstlisting}
+
+I think it is, in principle, possible to implement delayed conversion within the existing
+structure of the library.
+This can even be a conditional feature.
+One idea is to introduce an additional parameter for the \lstinline{@TQuantity@} class
+template. This parameter can represent the current choice of units for the quantity.
+The difficulty in implementing this feature is in the non-trivial equality of different
+representation of the same units.
+The following quantity types would need to be equal.
+%
+\begin{lstlisting}
+@TQuantity@<{@L0@, @L1@, @L-1@}, double, "m/s">;
+@TQuantity@<{@L0@, @L1@, @L-1@}, double, "m s-1">;
+@TQuantity@<{@L0@, @L1@, @L-1@}, double, "mm ms-1">;
+\end{lstlisting}
+
+Tagging results of arithmetic operations on units-tagged quantities would also not be
+straightforward. Reduction rules for the tag literals would need to be implemented.
 
 \subsection{Static or dynamic number of dimensions} % ----------------------------------------------
 
