@@ -14,6 +14,8 @@ struct Dimensions {
         return mass || length || time;
     }
 
+    auto operator<=>(const Dimensions&) const = default;
+
     constexpr Dimensions operator+(const Dimensions& r) const noexcept {
         return { mass + r.mass, length + r.length, time + r.time };
     }
@@ -67,7 +69,7 @@ struct Dimensions {
         time /= n;
         return *this;
     }
-};
+}; // end struct Dimensions
 
 namespace detail {
 
@@ -144,6 +146,9 @@ constexpr auto Root(const auto& x) noexcept {
     }
 }
 
+template <unsigned N>
+struct StringLiteral;
+
 } // namespace detail
 
 template <Dimensions D, typename T>
@@ -173,8 +178,11 @@ class Quantity<D, T> {
     template <Dimensions, typename>
     friend class Quantity;
 
-    template <Dimensions d_, typename T_>
-    friend constexpr Quantity<d_, T_> MakeQuantity(T_) noexcept;
+    template <Dimensions D_, typename T_>
+    friend constexpr Quantity<D_, T_> MakeQuantity(T_) noexcept;
+
+    template <detail::StringLiteral Units, Dimensions D_, typename T_>
+    friend constexpr T_ To(const Quantity<D_, T_>&) noexcept;
 
     // Prevent default initialization
     Quantity() = delete;
@@ -314,7 +322,7 @@ public:
     friend constexpr auto Root(Quantity q) noexcept {
         return MakeQuantity<(D / N)>(detail::Root<N>(q.value));
     }
-};
+}; // end class Quantity
 
 template <NotAQuantity L, Dimensions RD, typename R>
 constexpr auto operator*(L l, Quantity<RD, R> r) noexcept
@@ -611,30 +619,40 @@ struct LiteralParser {
     }
 };
 
+} // namespace detail
+
+template <detail::StringLiteral Units, Dimensions D, typename T>
+constexpr T To(const Quantity<D, T>& q) noexcept {
+    constexpr detail::LiteralParser parser(Units.begin(), Units.end());
+    static_assert(
+        D == parser.def.d,
+        "incompatible units"
+    );
+    return q.value / *parser.def;
 }
 
 namespace literals {
 
-template <detail::StringLiteral s>
+template <detail::StringLiteral Units>
 constexpr auto operator ""_u() noexcept {
-    constexpr detail::LiteralParser p(s.begin(), s.end());
-    return MakeQuantity<p.def.d>(double(*p.def));
+    constexpr detail::LiteralParser parser(Units.begin(), Units.end());
+    return MakeQuantity<parser.def.d>(double(*parser.def));
 }
 
-template <detail::StringLiteral s>
+template <detail::StringLiteral Units>
 constexpr auto operator ""_uf() noexcept {
-    constexpr detail::LiteralParser p(s.begin(), s.end());
-    return MakeQuantity<p.def.d>(float(*p.def));
+    constexpr detail::LiteralParser parser(Units.begin(), Units.end());
+    return MakeQuantity<parser.def.d>(float(*parser.def));
 }
 
 } // namespace literals
 
 namespace simple_literals {
-using namespace units::literals;
 
-// use to double so that x._unit == x * "units"_u
+// convert to double so that x._units == x * "units"_u
 #define SimpleLiteral(NAME) \
     constexpr auto operator ""_##NAME(long double x) noexcept { \
+        using namespace units::literals; \
         return double(x) * #NAME ## _u; \
     }
 
@@ -679,6 +697,6 @@ SimpleLiteral(yd)
 
 #undef SimpleLiteral
 
-} // namespace literals
+} // namespace simple_literals
 
 } // namespace units

@@ -511,3 +511,12 @@ TEST(SimpleLiterals) {
     static_assert(122.3_Wh  == 1.223e2 * "Wh"_u );
     static_assert(122.3_yd  == 1.223e2 * "yd"_u );
 }
+
+TEST(To) {
+    using namespace units::literals;
+
+    auto speed = 10 * "m/s"_u;
+    auto speed_in_km_h = units::To<"km/h">(speed);
+    static_assert(std::is_same_v<decltype(speed_in_km_h), double>);
+    TEST_EQ(speed_in_km_h, 36);
+}
