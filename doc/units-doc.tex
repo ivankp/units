@@ -19,9 +19,6 @@
 \ExplSyntaxOff
 
 \usepackage{xcolor}
-\definecolor{green1}{HTML}{198019} % green from 1505.03893
-% \definecolor{cern}{HTML}{0033A0}
-% \definecolor{cern80}{HTML}{385CB4}
 
 \definecolor{lstType}{HTML}{088A00}
 \definecolor{lstKeyword}{HTML}{BF5908}
@@ -75,14 +72,19 @@ typedef, typeid, typename, union, using, virtual, volatile, while, xor, xor_eq
   hyperfootnotes=false,
   linktoc=all,
   colorlinks=true,
-  linkcolor=green1,
-  citecolor=green1,
+  linkcolor=black,
+  citecolor=black,
   urlcolor=blue,
   pdfauthor={Ivan Pogrebnyak},
   pdftitle={Units in C++},
   pdfsubject={},
   pdfkeywords={units, C++}
 ]{hyperref}
+
+\renewcommand{\chapterautorefname}{Chapter}
+\renewcommand{\sectionautorefname}{Section}
+\let\subsectionautorefname\sectionautorefname
+\let\subsubsectionautorefname\sectionautorefname
 
 \newcommand{\lib}{\lstinline{@Nunits@} library}
 
@@ -145,7 +147,7 @@ maintenance, and overhead at run time and compile time.
 
 \section{The units library} % ======================================================================
 
-\subsection{Example} % -----------------------------------------------------------------------------
+\subsection{Example}\label{sec:example} % ---------------------------------------------------------
 
 To illustrate what problems the \lib{} addresses and how it solves them,
 let us start with a simple example.
@@ -337,12 +339,70 @@ the units via multiplication.
 auto length = @L2.3@ * "m"@L_u@; // equivalent to 2.3 meter
 \end{lstlisting}
 %
-Thus, multiplication can be thought of as a way to imbue values with units.
-Conversely, division can be used to convert a quantity to specific units.
+Thus, multiplication by a literal can be thought of as a way to imbue values with units.
+Conversely, division by a literal can be used to convert a quantity to specific units.
 %
 \begin{lstlisting}
 auto length = @L3@ * "ft"@L_u@;
 double length_in_ft = length / "m"@L_u@; // equal to 0.9144
+\end{lstlisting}
+
+More generally, division and multiplication are implemented for all
+\lstinline{@TQuantity@<D, @TT@>} for which the value type \lstinline{@TT@} has
+its division and multiplication implemented respectively.
+Addition and subtraction are implemented likewise, but only for pairs of
+quantities with equal dimensions.
+
+Dimensionless quantities are implicitly convertible to references to their value.
+This feature works in tandem with multiplication and division operators.
+For example, assuming that \lstinline{@TVec3@} implements a 3-dimensional vector type
+with overloaded operators.
+%
+\begin{lstlisting}
+@Nunits@::@TLength@<@TVec3@> @FGetDisplacement@();
+@Nunits@::@TTime@<double> @FGetTime@();
+auto velocity = @FGetDisplacement@() / @FGetTime@(); // the type is units::Velocity<Vec3>
+\end{lstlisting}
+
+To further illustrate how these features work together,
+consider a situation where we have a function that we can't modify that takes velocity
+in $\text{m}/\text{s}$ as \lstinline{@TVec3@}.
+%
+\begin{lstlisting}
+void @Nthirdparty@::@FCalculate@(const @TVec3@&);
+\end{lstlisting}
+%
+As in the example in \autoref{sec:example}, we can call this function like this
+%
+\begin{lstlisting}
+@Nthirdparty@::@FCalculate@(velocity / "m/s"@L_u@);
+\end{lstlisting}
+%
+This works, because the result of division by the literal is a dimensionless quantity,
+and as such, it is convertible to a reference to it's value.
+The following, however, do not work.
+%
+\begin{lstlisting}
+@Nthirdparty@::@FCalculate@(velocity); // compilation error
+@Nthirdparty@::@FCalculate@(position / "m/s"@L_u@); // compilation error
+\end{lstlisting}
+%
+In both cases, the quantities passed to the function are not dimensionless.
+
+This combination of features provides some good guarantees. However, it relies on the
+function call requiring an implicit conversion.
+The following does not produce a compilation error, though there is a bug.
+%
+\begin{lstlisting}
+auto velocity_in_mph = position / "mph"@L_u@; // compiles, but is likely a bug
+\end{lstlisting}
+
+To provide a way to get the value of a quantity in specific units and simultaneously check
+that the dimensions are compatible, the \lib{} implements the
+\lstinline{@FTo@()} function.
+\begin{lstlisting}
+auto not_velocity_in_mph = @Nunits@::@FTo@<"mph">(position); // compilation error
+auto velocity_in_mph = @Nunits@::@FTo@<"mph">(velocity); // OK
 \end{lstlisting}
 
 \section{Implementation choices} % =================================================================
