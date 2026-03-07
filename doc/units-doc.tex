@@ -362,9 +362,10 @@ For example, assuming that \lstinline{@TVec3@} implements a 3-dimensional vector
 with overloaded operators.
 %
 \begin{lstlisting}
-@Nunits@::@TLength@<@TVec3@> @FGetDisplacement@();
-@Nunits@::@TTime@<double> @FGetTime@();
-auto velocity = @FGetDisplacement@() / @FGetTime@(); // the type is units::Velocity<Vec3>
+using namespace @Nunits@::@Nquantities@;
+@TLength@<@TVec3@> @FGetDisplacement@();
+@TTime@<double> @FGetTime@();
+auto velocity = @FGetDisplacement@() / @FGetTime@(); // the type is Velocity<Vec3>
 \end{lstlisting}
 
 To further illustrate how these features work together,
