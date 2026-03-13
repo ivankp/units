@@ -1,6 +1,6 @@
 \documentclass[11pt,letterpaper]{article}
 \usepackage[margin=1in]{geometry}
-\usepackage{indentfirst,amsmath,amssymb,enumitem}
+\usepackage{indentfirst,amsmath,amssymb,enumitem,titlesec}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T2A]{fontenc}
@@ -95,8 +95,7 @@ typedef, typeid, typename, union, using, virtual, volatile, while, xor, xor_eq
   linkcolor=black,
   citecolor=black,
   urlcolor=cern80,
-  pdfauthor={Ivan Pogrebnyak},
-  pdftitle={Units in C++},
+  pdfusetitle,
   pdfsubject={},
   pdfkeywords={units, C++}
 ]{hyperref}
@@ -110,13 +109,15 @@ typedef, typeid, typename, union, using, virtual, volatile, while, xor, xor_eq
 
 \newcommand{\lib}{\lstinline{@Nunits@} library}
 
-\title{Units in C\++}
+\title{A compile-time units library for \texorpdfstring{C\++}{C++}}
 \author{Ivan Pogrebnyak}
 \date{\today}
 
 \begin{document}
 
 \maketitle
+
+\tableofcontents
 
 \section{Introduction} % ===========================================================================
 
@@ -127,9 +128,14 @@ represent units.
 The library provides features to define dimensionful quantities,
 perform arithmetic operations on them, and validate compatibility of quantities at compile time.
 
+This document starts with a theoretical discussion in \autoref{sec:theory}
+and a synopsis of the library's features and core implementation principles in \autoref{sec:lib}.
+\autoref{sec:choices} summarizes design choices worth discussing and features that would require
+additional time to implement.
+
 The \lib{} can be found at \url{https://github.com/ivankp/units}.
 
-\section{Theory} % =================================================================================
+\section{Theory}\label{sec:theory} % ===============================================================
 
 A physical \textbf{quantity}, such as volume or pressure, can be divided into two components:
 \textbf{units}, specifying the type of quantity, and the quantity's \textbf{value}, specifying how
@@ -160,7 +166,7 @@ think about how conversions are handled and at what point. And, as always, one m
 trade-off between numeric precision, user friendliness, difficulty of implementation and
 maintenance, and overhead at run time and compile time.
 
-\section{The units library} % ======================================================================
+\section{The units library}\label{sec:lib} % =======================================================
 
 \subsection{Example}\label{sec:example} % ---------------------------------------------------------
 
@@ -430,7 +436,7 @@ auto velocity_in_mph = @Nunits@::@FTo@<"mph">(velocity); // OK
 
 \subsection{Literals' features} % ------------------------------------------------------------------
 
-\section{Implementation choices} % =================================================================
+\section{Implementation choices and future features}\label{sec:choices} % ==========================
 
 \subsection{Run-time or compile-time representation of units} % ------------------------------------
 
@@ -578,10 +584,6 @@ e.g. number of tiles per room.
 
 Whether the library assigns them a dimension or not is a choice we can make.
 If we implement dynamic units, this is a choice the user can make instead.
-
-\section{Future features} % ========================================================================
-
-Features that can but haven't been implemented.
 
 \subsection{Rational powers} % ---------------------------------------------------------------------
 
