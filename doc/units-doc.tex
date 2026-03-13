@@ -509,20 +509,36 @@ The following quantity types would need to be equal.
 @TQuantity@<{@L0@, @L1@, @L-1@}, double, "mm ms-1">;
 \end{lstlisting}
 
-Tagging results of arithmetic operations involving units-tagged quantities would also not be
+Tagging results of arithmetic operations which involve units-tagged quantities would not be
 straightforward. Reduction rules for the tag literals would need to be implemented.
+The tagging value may be a parsed representation of the units, which would partially solve the
+equivalence problem.
+But there may still be problems with exact equivalence due to floating-point conversion factors.
+It may be worthwhile to think about whether we need to implement arbitrary precision arithmetic.
 
 \subsection{Static or dynamic number of dimensions} % ----------------------------------------------
 
+Static dimensions:
+\begin{enumerate}
+    \item Simpler implementation.
+    \item May cause compatibility problems if extra dimensions are added in future versions
+      of the library.
+\end{enumerate}
+
+Dynamic dimensions:
+\begin{enumerate}
+    \item Users can decide what dimensions they need.
+\end{enumerate}
+
 The goal at the current stage of development is to provide a minimum viable product:
 a proof of concept with most features present, but not necessarily completely filled out.
-The \lib{} currently implements 3 dimensions of units:
+The library currently implements 3 dimensions of units:
 mass, length, and time.
 These units are sufficient for mechanics.
 
 Further dimensions can be added in the same way.
 Adding units of electric charge or current and temperature would expand the scope of available
-units to include electromagnetism and thermodynamics, covering most physics and engineering
+units to electromagnetism and thermodynamics, covering most physics and engineering
 applications.
 
 To cover the SI unit system, two extra dimensions would be necessary:
@@ -541,24 +557,27 @@ distinct types, e.g. \lstinline{@TLength@}, \lstinline{@TElectricCharge@}, etc.,
 and make \lstinline{@TDimensions@} be a variadic template that can take them as a
 parameter pack.
 
-\subsection{Distinguishing units with equal dimensions but distinct meaning} % ---------------------
+\subsection{Distinguishing units with equal dimensions but different meaning} % --------------------
 
 This problem was briefly mentioned in the previous section.
 Extra dimensions may be useful for distinguishing quantities that otherwise would have
 the same units but different meaning, such as energy and torque, or pressure and stress.
 
-Whether angular quantities should be given a separate dimension depends on the use case.
-It is quite possible to handle them as dimensionless units and provide dimensionless
-definitions of radians, degrees, and revolutions.
-Using radians as a base angular unit with no dimensions may facilitate trigonometric
-calculations.
+Angular quantities are an interesting example.
+The SI unit system assigns no dimensions to radians, degrees, or revolutions.
+If we keep them dimensionless and use radians as a base angular unit we get
+nice synergy with the standard library trigonometric functions.
 %
 \begin{lstlisting}
-@Nstd@::@Fsin@(@L15@ * "deg"@L_u);  @!{\LL}@
+@Nstd@::@Fsin@(@L90@ * "deg"@L_u@);  @!{\LL}@
+@Nstd@::@Fsin@(@L0.25@ * "rev"@L_u@);
 \end{lstlisting}
-%
-But one may or may not want angular quantities to be compatible with counting ones,
+
+On the other hand,  one may or may not want angular quantities to be compatible with counting ones,
 e.g. number of tiles per room.
+
+Whether the library assigns them a dimension or not is a choice we can make.
+If we implement dynamic units, this is a choice the user can make instead.
 
 \section{Future features} % ========================================================================
 
