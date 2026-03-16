@@ -144,8 +144,8 @@ perform arithmetic operations on them, and validate compatibility of quantities 
 
 This document starts with a theoretical discussion in \autoref{sec:theory}
 and a synopsis of the library's features and core implementation principles in \autoref{sec:lib}.
-\autoref{sec:choices} summarizes design choices worth discussing and features that would require
-additional time to implement.
+\autoref{sec:choices} summarizes design choices worth discussing and future features that would
+require additional time to implement.
 
 The \lib{} can be found at \url{https://github.com/ivankp/units}.
 
@@ -286,7 +286,8 @@ The corresponding call to unmodified \lstinline{@FAddProjectile@()} would look l
 @Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@() / "kg"@L_u@);
 \end{lstlisting}
 %
-We divide by \lstinline{"kg"@L_u@} because we need the value in kilograms.
+We divide by \lstinline{"kg"@L_u@} because the value in kilograms
+is equal the number of times 1~kg fits in the quantity.
 Here, again, the code becomes self-documenting, as units have to be explicitly stated, or it won't
 compile.
 
@@ -595,9 +596,42 @@ On the other hand,  one may or may not want angular quantities to be compatible 
 e.g. number of tiles per room.
 
 Whether the library assigns them a dimension or not is a choice we can make.
-If we implement dynamic units, this is a choice the user can make instead.
+If we implement dynamic units, this is a choice users can make instead.
 
 \subsection{Rational powers} % ---------------------------------------------------------------------
+
+Quantities representing physical observables always have integral exponents.
+However, other quantities, such as probability amplitudes in quantum mechanics,
+or simply computational results of expressions with dimensionful quantities factored out
+from under roots can have non-integral rational powers.
+In certain engineering applications, arbitrary empirical functions may be used in
+regression models. These functions may involve parameters whose units have non-integral rational
+powers.
+
+It is possible to extend the \lstinline{@Nunits@::@TDimensions@} type from integral to
+rational values.
+This may be done in one of the following three ways.
+\begin{enumerate}
+  \item Using \lstinline{@Nstd@::@Tratio@} available via the standard library header
+    \href{https://en.cppreference.com/w/cpp/header/ratio.html}{\lstinline{<ratio>}}. \\
+    A drawback of this approach is that \lstinline{@Nstd@::@Tratio@} is a template,
+%
+\begin{lstlisting}
+template <
+    @Nstd@::@Tintmax_t@ Num,
+    @Nstd@::@Tintmax_t@ Denom = @L1@
+> class @Tratio@;
+\end{lstlisting}
+    and its use may require a lot of template instantiations,
+    with can increase compilation time.
+    We'd need to measure compilation time to assess whether is this a problem.
+  \item Finding an existing \lstinline{constexpr} rational arithmetic library. \\
+    We'd need to find a suitable library and consider where it is worthwhile to
+    introduce it as a dependency.
+  \item Implementing \lstinline{constexpr} rational arithmetic from scratch. \\
+    We'd need to assess the time investment required to do so.
+
+\end{enumerate}
 
 \subsection{User-defined units and relative definitions} % -----------------------------------------
 
