@@ -84,17 +84,11 @@ typedef, typeid, typename, union, using, virtual, volatile, while, xor, xor_eq
     \setcounter{mylsteol}{0}%
   \fi%
 }
-\lst@AddToHook{OnNewLine}{%
+\lst@AddToHook{EOL}{%
   \lst@ifdisplaystyle%
     \ifnum\value{mylsteol}=0%
       \refstepcounter{lstlisting}%
       \ifx\lst@label\@empty\else \label{\lst@label}\fi%
-    \fi%
-  \fi%
-}
-\lst@AddToHook{EOL}{%
-  \lst@ifdisplaystyle%
-    \ifnum\value{mylsteol}=0%
       \hfill{\color{lstComment}[\thelstlisting]}%
       \setcounter{mylsteol}{1}%
     \fi%
