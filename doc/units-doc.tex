@@ -13,7 +13,6 @@
 \newcommand{\textplus}[1][+]{\raisebox{% font-independent height
   \dimexpr(\fontcharht\font`X-\height+\depth)/2\relax
 }{#1}}
-
 \ExplSyntaxOn
 \NewDocumentCommand\+{}{
   \peek_charcode_remove:NTF + {\textplus[++]}{\textplus[+]}
@@ -32,6 +31,7 @@
 \definecolor{lstComment}{HTML}{708090}
 
 \usepackage{listings}
+
 \lstset{
     xleftmargin=0.25in,
 %
@@ -77,16 +77,30 @@ typedef, typeid, typename, union, using, virtual, volatile, while, xor, xor_eq
     keywordstyle=[2]\color{lstNamespace},
 }
 
-% \newcounter{LLcnt}
-\NewDocumentCommand{\LL}{o}{%
-  \hfill {\refstepcounter{lstlisting}\color{lstComment}[\thelstlisting]}%
-  \IfValueT{#1}{\label{#1}}%
-}
+\newcounter{mylstnum}
+\newcounter{mylsteol}[mylstnum]
 
 % \usepackage{etoolbox}
-% \makeatletter
-% \lst@AddToHook{EveryLine}{}
-% \makeatother
+% \BeforeBeginEnvironment{lstlisting}{\refstepcounter{lstnum}}
+
+\makeatletter
+% \lst@Key{l}\relax{\def\lst@mylabel{#1}}
+\lst@AddToHook{OnNewLine}{%
+  \lst@ifdisplaystyle%
+    \ifnum\value{lstnumber}=0%
+      \refstepcounter{mylstnum}%
+      \ifx\lst@label\@empty\else \label{\lst@label}\fi%
+    \fi%
+  \fi%
+}
+\lst@AddToHook{EOL}{%
+  \lst@ifdisplaystyle%
+    \ifnum\value{mylsteol}=0%
+      \hfill{\color{lstComment}[\themylstnum]\setcounter{mylsteol}{1}}%
+    \fi%
+  \fi%
+}
+\makeatother
 
 \usepackage[
   hyperfootnotes=false,
@@ -96,7 +110,7 @@ typedef, typeid, typename, union, using, virtual, volatile, while, xor, xor_eq
   citecolor=black,
   urlcolor=cern80,
   pdfusetitle,
-  pdfsubject={},
+  pdfsubject={programming},
   pdfkeywords={units, C++}
 ]{hyperref}
 
@@ -177,7 +191,7 @@ For the sake of the argument, let's assume that there is a function that adds pr
 given mass to the simulation.
 
 \begin{lstlisting}
-void @FAddProjectile@(double mass);  @!{\LL}@
+void @FAddProjectile@(double mass);
 \end{lstlisting}
 
 As is, the \lstinline{@FAddProjectile@()} function expects \lstinline{mass} in certain units.
@@ -190,14 +204,14 @@ it may come from another library that made a different assumption and chose poun
 instead of kilograms. The situation may be as follows.
 %
 \begin{lstlisting}
-double @Nfoo@::@FGetMass@(); // returns mass in lb  @!{\LL}@
+double @Nfoo@::@FGetMass@(); // returns mass in lb
 void @Nbar@::@FAddProjectile@(double mass); // takes mass in kg
 \end{lstlisting}
 %
 A call like this would be incorrect.
 %
 \begin{lstlisting}
-@Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@()); // Mistakenly forgot to convert lb to kg  @!{\LL}@
+@Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@()); // Mistakenly forgot to convert lb to kg
 \end{lstlisting}
 %
 A software engineer who read the documentation for both libraries is the only one that can catch
@@ -215,7 +229,7 @@ It may be tempting to say that in this case a library does not have much to offe
 define a conversion factor.
 %
 \begin{lstlisting}
-const double lb_to_kg = @L0.45359237@;  @!{\LL}@
+const double lb_to_kg = @L0.45359237@;
 @Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@() * lb_to_kg);
 \end{lstlisting}
 %
@@ -225,7 +239,7 @@ How do we make sure the factors are defined accurately and consistently?
 Using the \lib, we can avoid these questions and use consistent definitions.
 %
 \begin{lstlisting}
-using namespace @Nunits@::@Nliterals@;  @!{\LL}@
+using namespace @Nunits@::@Nliterals@;
 @Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@() * "kg/lb"@L_u@);
 \end{lstlisting}
 
@@ -233,14 +247,14 @@ If we own \lstinline{@Nbar@} but not \lstinline{@Nfoo@}, we can change the signa
 \lstinline{@FAddProjectile@()} to take a mass quantity.
 %
 \begin{lstlisting}
-using @Nunits@::@Nquantities@::@TMass@;  @!{\LL}@
+using @Nunits@::@Nquantities@::@TMass@;
 void @Nbar@::@FAddProjectile@(@TMass@<double> mass); // units-aware definition
 \end{lstlisting}
 %
 With this change,
 %
 \begin{lstlisting}
-@Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@()); // Compilation error: dimensionless  @!{\LL}@
+@Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@()); // Compilation error: dimensionless
 @Nbar@::@FAddProjectile@(@L5@); // Compilation error: dimensionless
 @Nbar@::@FAddProjectile@(@L7.1@ * "m"@L_u@); // Compilation error: meters are not mass units
 \end{lstlisting}
@@ -250,7 +264,7 @@ all produce errors at compile-time, as neither of the arguments are convertible 
 Valid calls would look like this.
 %
 \begin{lstlisting}
-@Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@() * "lb"@L_u@);  @!{\LL}@
+@Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@() * "lb"@L_u@);
 @Nbar@::@FAddProjectile@(@L7.1@ * "kg"@L_u@);
 \end{lstlisting}
 %
@@ -262,14 +276,14 @@ If we own \lstinline{@Nfoo@} but not \lstinline{@Nbar@}, we can change the signa
 \lstinline{@FGetMass@()} to return a mass quantity.
 %
 \begin{lstlisting}
-using @Nunits@::@Nquantities@::@TMass@;  @!{\LL}@
+using @Nunits@::@Nquantities@::@TMass@;
 @TMass@<double> @Nfoo@::@FGetMass@(); // units-aware definition
 \end{lstlisting}
 %
 The corresponding call to unmodified \lstinline{@FAddProjectile@()} would look like this,
 %
 \begin{lstlisting}[label={lst:example_division}]
-@Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@() / "kg"@L_u@);  @!{\LL}@
+@Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@() / "kg"@L_u@);
 \end{lstlisting}
 %
 We divide by \lstinline{"kg"@L_u@} because we need the value in kilograms.
@@ -280,7 +294,7 @@ And finally, if we own both \lstinline{@Nfoo@} and \lstinline{@Nbar@}, we can mo
 to operate on units-aware quantities, making the following expression valid and correct.
 %
 \begin{lstlisting}
-@Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@());  @!{\LL}@
+@Nbar@::@FAddProjectile@(@Nfoo@::@FGetMass@());
 \end{lstlisting}
 Note, that now, if the above expression compiles, we have a strong guarantee that the quantities
 are compatible between the two functions.
@@ -290,7 +304,7 @@ are compatible between the two functions.
 The main construct of the \lib{} is
 %
 \begin{lstlisting}
-template <@TDimensions@ D, typename @TT@>  @!{\LL}@
+template <@TDimensions@ D, typename @TT@>
 class @TQuantity@ {
     @TT@ value;
     // . . .
@@ -303,7 +317,7 @@ The \lstinline{typename @TT@} template parameter is constrained to not be a \lst
 to avoid constructs with multiple levels of units.
 %
 \begin{lstlisting}
-struct @TDimensions@ {  @!{\LL}@
+struct @TDimensions@ {
     int mass, length, time;
     // . . .
 };
@@ -319,7 +333,7 @@ The library provides a number of predefined aliases for specific quantity types.
 For example, speed and velocity are represented as
 %
 \begin{lstlisting}
-template <typename @TT@>  @!{\LL}@
+template <typename @TT@>
 using @TSpeed@ = @TQuantity@<{@L0@, @L1@, @L-1@}, @TT@>;
 template <typename @TT@>
 using @TVelocity@ = @TSpeed@<@TT@>;
@@ -331,7 +345,7 @@ except for the dimensionless case.
 This prevents the user from creating dimensionful quantities with ambiguous units.
 %
 \begin{lstlisting}
-@TQuantity@<{@L1@, @L0@, @L0@}, double> mass(@L5.3@); // Compilation error  @!{\LL}@
+@TQuantity@<{@L1@, @L0@, @L0@}, double> mass(@L5.3@); // Compilation error
                                        // What are the units of this mass?
 @TQuantity@<{@L0@, @L0@, @L0@}, double> number(@L7.13@); // OK
                                           // This is a dimensionless number
@@ -345,7 +359,7 @@ The literals are defined under the \lstinline{@Nunits@::@Nliterals@} namespace.
 For example,
 %
 \begin{lstlisting}
-using namespace @Nunits@::@Nliterals@;  @!{\LL}@
+using namespace @Nunits@::@Nliterals@;
 auto length = "m"@L_u@; // equivalent to 1 meter
 \end{lstlisting}
 %
@@ -360,14 +374,14 @@ The intended way to use the \lstinline{@Nunits@} literals is to specify both the
 the units via multiplication.
 %
 \begin{lstlisting}
-auto length = @L2.3@ * "m"@L_u@; // equivalent to 2.3 meter  @!{\LL}@
+auto length = @L2.3@ * "m"@L_u@; // equivalent to 2.3 meter
 \end{lstlisting}
 %
 Thus, multiplication by a literal can be thought of as a way to imbue values with units.
 Conversely, division by a literal can be used to convert a quantity to specific units.
 %
 \begin{lstlisting}
-auto length = @L3@ * "ft"@L_u@;  @!{\LL}@
+auto length = @L3@ * "ft"@L_u@;
 double length_in_ft = length / "m"@L_u@; // equal to 0.9144
 \end{lstlisting}
 
@@ -383,7 +397,7 @@ For example, assuming that \lstinline{@TVec3@} implements a 3-dimensional vector
 with overloaded operators.
 %
 \begin{lstlisting}
-using namespace @Nunits@::@Nquantities@;  @!{\LL}@
+using namespace @Nunits@::@Nquantities@;
 @TLength@<@TVec3@> @FGetDisplacement@();
 @TTime@<double> @FGetTime@();
 auto velocity = @FGetDisplacement@() / @FGetTime@(); // the type is Velocity<Vec3>
@@ -394,7 +408,7 @@ consider a situation where we have a function that we can't modify that takes ve
 in $\text{m}/\text{s}$ as \lstinline{@TVec3@}.
 %
 \begin{lstlisting}
-void @Nthirdparty@::@FCalculate@(const @TVec3@&);  @!{\LL}@
+void @Nthirdparty@::@FCalculate@(const @TVec3@&);
 \end{lstlisting}
 %
 % As in the example in \autoref{sec:example}, we can call this function like this
@@ -403,7 +417,7 @@ As in \autoref{lst:example_division} in \autoref{sec:example},
 we can call this function like this
 %
 \begin{lstlisting}
-@Nthirdparty@::@FCalculate@(velocity / "m/s"@L_u@);  @!{\LL}@
+@Nthirdparty@::@FCalculate@(velocity / "m/s"@L_u@);
 \end{lstlisting}
 %
 This works, because the result of division by the literal is a dimensionless quantity,
@@ -411,7 +425,7 @@ and as such, it is convertible to a reference to it's value.
 Conversely, the following do not work, because the passed quantities are not dimensionless.
 %
 \begin{lstlisting}
-@Nthirdparty@::@FCalculate@(velocity); // compilation error  @!{\LL}@
+@Nthirdparty@::@FCalculate@(velocity); // compilation error
 @Nthirdparty@::@FCalculate@(position / "m/s"@L_u@); // compilation error
 \end{lstlisting}
 %
@@ -422,7 +436,7 @@ function call requiring an implicit conversion.
 The following does not produce a compilation error, though there is a bug.
 %
 \begin{lstlisting}
-auto velocity_in_mph = position / "mph"@L_u@; // compiles, but is likely a bug  @!{\LL}@
+auto velocity_in_mph = position / "mph"@L_u@; // compiles, but is likely a bug
 \end{lstlisting}
 
 To provide a way to get the value of a quantity in specific units and simultaneously check
@@ -430,7 +444,7 @@ that the dimensions are compatible, the \lib{} implements the
 \lstinline{@FTo@()} function.
 %
 \begin{lstlisting}
-auto not_velocity_in_mph = @Nunits@::@FTo@<"mph">(position); // compilation error  @!{\LL}@
+auto not_velocity_in_mph = @Nunits@::@FTo@<"mph">(position); // compilation error
 auto velocity_in_mph = @Nunits@::@FTo@<"mph">(velocity); // OK
 \end{lstlisting}
 
@@ -496,7 +510,7 @@ For simplicity, the \lib{} implements immediate conversion.
 Internally, the library uses base SI units: kg, m, s.
 %
 \begin{lstlisting}
-auto value = @Nunits@::@FTo@<"ft">(@L1.33@ * "ft"@L_u@);  @!{\LL}@
+auto value = @Nunits@::@FTo@<"ft">(@L1.33@ * "ft"@L_u@);
 bool test = (value == @L1.33@); // may be false
 \end{lstlisting}
 
@@ -510,7 +524,7 @@ representation of the same units.
 The following quantity types would need to be equal.
 %
 \begin{lstlisting}
-@TQuantity@<{@L0@, @L1@, @L-1@}, double, "m/s">;  @!{\LL}@
+@TQuantity@<{@L0@, @L1@, @L-1@}, double, "m/s">;
 @TQuantity@<{@L0@, @L1@, @L-1@}, double, "m s-1">;
 @TQuantity@<{@L0@, @L1@, @L-1@}, double, "mm ms-1">;
 \end{lstlisting}
@@ -575,7 +589,7 @@ If we keep them dimensionless and use radians as a base angular unit we get
 nice synergy with the standard library trigonometric functions.
 %
 \begin{lstlisting}
-@Nstd@::@Fsin@(@L90@ * "deg"@L_u@);  @!{\LL}@
+@Nstd@::@Fsin@(@L90@ * "deg"@L_u@);
 @Nstd@::@Fsin@(@L0.25@ * "rev"@L_u@);
 \end{lstlisting}
 
