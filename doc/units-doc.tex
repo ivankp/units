@@ -1,6 +1,6 @@
 \documentclass[11pt,letterpaper]{article}
 \usepackage[margin=1in]{geometry}
-\usepackage{indentfirst,amsmath,amssymb,enumitem,titlesec}
+\usepackage{indentfirst,amsmath,amssymb,titlesec,enumitem}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T2A]{fontenc}
@@ -31,7 +31,6 @@
 \definecolor{lstComment}{HTML}{708090}
 
 \usepackage{listings}
-
 \lstset{
     xleftmargin=0.25in,
 %
@@ -77,18 +76,18 @@ typedef, typeid, typename, union, using, virtual, volatile, while, xor, xor_eq
     keywordstyle=[2]\color{lstNamespace},
 }
 
-\newcounter{mylstnum}
-\newcounter{mylsteol}[mylstnum]
-
-% \usepackage{etoolbox}
-% \BeforeBeginEnvironment{lstlisting}{\refstepcounter{lstnum}}
+\newcounter{mylsteol}
 
 \makeatletter
-% \lst@Key{l}\relax{\def\lst@mylabel{#1}}
+\lst@AddToHook{PreInit}{%
+  \lst@ifdisplaystyle%
+    \setcounter{mylsteol}{0}%
+  \fi%
+}
 \lst@AddToHook{OnNewLine}{%
   \lst@ifdisplaystyle%
-    \ifnum\value{lstnumber}=0%
-      \refstepcounter{mylstnum}%
+    \ifnum\value{mylsteol}=0%
+      \refstepcounter{lstlisting}%
       \ifx\lst@label\@empty\else \label{\lst@label}\fi%
     \fi%
   \fi%
@@ -96,7 +95,8 @@ typedef, typeid, typename, union, using, virtual, volatile, while, xor, xor_eq
 \lst@AddToHook{EOL}{%
   \lst@ifdisplaystyle%
     \ifnum\value{mylsteol}=0%
-      \hfill{\color{lstComment}[\themylstnum]\setcounter{mylsteol}{1}}%
+      \hfill{\color{lstComment}[\thelstlisting]}%
+      \setcounter{mylsteol}{1}%
     \fi%
   \fi%
 }
@@ -411,8 +411,6 @@ in $\text{m}/\text{s}$ as \lstinline{@TVec3@}.
 void @Nthirdparty@::@FCalculate@(const @TVec3@&);
 \end{lstlisting}
 %
-% As in the example in \autoref{sec:example}, we can call this function like this
-% TODO: reference listings
 As in \autoref{lst:example_division} in \autoref{sec:example},
 we can call this function like this
 %
