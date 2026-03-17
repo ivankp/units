@@ -32,7 +32,7 @@
 
 \usepackage{listings}
 \lstset{
-    xleftmargin=0.25in,
+    xleftmargin=\parindent,
 %
     upquote=true,
 %
@@ -76,21 +76,20 @@ typedef, typeid, typename, union, using, virtual, volatile, while, xor, xor_eq
     keywordstyle=[2]\color{lstNamespace},
 }
 
-\newcounter{mylsteol}
-
 \makeatletter
+\newif\if@mylstfirstline
 \lst@AddToHook{PreInit}{%
   \lst@ifdisplaystyle%
-    \setcounter{mylsteol}{0}%
+    \@mylstfirstlinetrue%
   \fi%
 }
 \lst@AddToHook{EOL}{%
   \lst@ifdisplaystyle%
-    \ifnum\value{mylsteol}=0%
+    \if@mylstfirstline%
       \refstepcounter{lstlisting}%
       \ifx\lst@label\@empty\else \label{\lst@label}\fi%
       \hfill{\color{lstComment}[\thelstlisting]}%
-      \setcounter{mylsteol}{1}%
+      \@mylstfirstlinefalse%
     \fi%
   \fi%
 }
